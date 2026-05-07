@@ -1,0 +1,51 @@
+# ============================================
+# GitHub Actions: 機密情報の server-side スキャン
+# ============================================
+# 目的: ローカル pre-commit hook では防げないバイパス経路
+#      （GitHub Web 編集経由 / `git commit --no-verify`）を塞ぐ。
+#
+# 背景: task-board (前プロジェクト) で起きた application.yml への
+#       平文パスワードコミット事故と同型の不可逆事故を、複数の防御層で防ぐ。
+#
+# 動作:
+#   - push to main / pull_request to main で自動実行
+#   - gitleaks/gitleaks-action@v2 を使用（Public リポジトリは無料）
+#   - 機密情報検知時は workflow を fail（PR チェックで可視化）
+#
+# 関連:
+#   - .pre-commit-config.yaml: ローカル gitleaks（commit 時）
+#   - .gitignore: .env 等の除外（ステージング前）
+#   - 本ファイル: server-side（push / PR 時）← 最後の防衛線
+# ============================================
+
+name: 機密情報スキャン (gitleaks)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: チェックアウト（履歴を全て取得）
+        uses: actions/checkout@v4
+        with:
+          # gitleaks は履歴全体をスキャンするため、shallow clone は不適
+          fetch-depth: 0
+
+      - name: gitleaks 実行
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITLEAKS_LICENSE は Public リポジトリでは不要
+          # （Org / Private リポジトリで使う場合のみ必要）
