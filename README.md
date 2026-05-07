@@ -124,13 +124,19 @@ npm run dev
 
 ## 開発ルール
 
-本リポジトリの開発ルールは [`CLAUDE.md`](./CLAUDE.md) に記載しています。
+本リポジトリの開発・運用ルールは以下に記載しています。
 
+- [`OPERATIONS.md`](./OPERATIONS.md) — **プロジェクト運用方針**（リポジトリ閲覧者・講師向け）
+- [`CLAUDE.md`](./CLAUDE.md) — **Claude Code 行動規範**（AI/開発者向け詳細ルール）
+- [`docs/learning-notes.md`](./docs/learning-notes.md) — 開発中の学び・事故記録（PDCA(S) の S）
+
+主な内容:
 - ブランチ命名規則
 - Issue ファースト・ワークフロー
 - コミットメッセージ規則（Conventional Commits / 日本語）
 - PR 規則
 - 禁止事項（破壊的操作の制限、AI 誤操作防止）
+- トヨタ式 PDCA(S) と安心・安全ファースト作業方針
 
 ---
 

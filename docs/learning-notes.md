@@ -49,7 +49,7 @@ Claude が「認証アカウントと記載した URL の owner が違う」こ�
 | 層 | 対策 | 配置場所 | 状態 |
 |---|---|---|---|
 | 1 | Claude のメモリに「新規プロジェクト時は `gh api user` を最初に実行」を保存 | `~/.claude/projects/-Users-macmini-Desktop-Cursor/memory/feedback_new_project_preflight.md` | ✅ 実装済 |
-| 2 | 共通リファレンスとして Pre-flight Check リストを作成 | `/Users/macmini/Desktop/_templates/new-project-preflight-check.md` | ✅ 実装済 |
+| 2 | 共通リファレンスとして Pre-flight Check リストを作成 | 開発者個人の横断学習システム（外部リソース・本リポジトリ単独運用に支障なし） | ✅ 実装済 |
 | 3 | 本プロジェクトに事故全プロセスを記録（このファイル） | `docs/learning-notes.md` | ✅ 実装済 |
 | 4 | ユーザー側ルール: 新規プロジェクト時に「アカウント名確認した？」を最初に確認 | 記憶・習慣 | 運用中 |
 
