@@ -1,0 +1,78 @@
+# ============================================
+# macOS
+# ============================================
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ============================================
+# エディタ・IDE
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ============================================
+# 機密情報・環境変数（絶対にコミットしない）
+# ============================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.yml
+master.key
+credentials.yml.enc
+
+# ============================================
+# Ruby / Rails
+# ============================================
+/.bundle
+/vendor/bundle
+/log/*
+!/log/.keep
+/tmp/*
+!/tmp/.keep
+/storage/*
+!/storage/.keep
+/public/uploads/
+/public/assets/
+/public/packs/
+/public/packs-test/
+*.log
+.byebug_history
+.rspec_status
+/db/*.sqlite3
+/db/*.sqlite3-journal
+/coverage/
+/spec/tmp/
+
+# ============================================
+# Node.js / Nuxt
+# ============================================
+node_modules/
+.nuxt/
+.output/
+.nitro/
+.cache/
+dist/
+.data/
+.env.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json.bak
+
+# ============================================
+# Docker
+# ============================================
+*.pid
+
+# ============================================
+# その他
+# ============================================
+Thumbs.db
+*.tmp
+*.bak
