@@ -354,7 +354,31 @@ AWS / Terraform を扱う AI コーディングツールが本番環境を破壊
 
 ---
 
-## 15. タスク管理アプリでの教訓カードを継承
+## 15. 全プロジェクト横断・学習リソースへの参照
+
+本プロジェクト固有のルールを補強する形で、**全プロジェクト共通の学習リソース**が
+`/Users/macmini/Desktop/_templates/` に配置されている。新しい作業の前に必ず確認すること。
+
+### 15-1. リソース一覧
+
+| リソース | 場所 | 用途 |
+|---|---|---|
+| **Pre-flight Check** | `_templates/new-project-preflight-check.md` | 新規プロジェクト・新セットアップ時の事前検証 |
+| **新プロジェクト初日チェックリスト** | `_templates/new-project-init-checklist.md` | Day 1 のルーチン化 |
+| **事故ライブラリ** | `_templates/incident-library/INDEX.md` | 過去全事故の症状・真因・対策 |
+| **教訓ライブラリ** | `_templates/lessons-learned/INDEX.md` | 抽象化された学びの蓄積 |
+| **振り返りスケジュール** | `_templates/review-schedule.md` | 仕組み自体の定期見直し（PDCA on PDCA） |
+
+### 15-2. 全プロジェクト共通教訓（最高レベル）
+
+`_templates/lessons-learned/INDEX.md` から「最高レベル」の教訓をコピー：
+
+1. **ローカル設定値（git config / npm config / aws config 等）と外部サービスのアカウント名は別物として扱う**
+2. **思い込み・会話の流れで進めず、必ず実コマンドで真偽を確定させる（実行こそ真実）**
+3. **重要な固有名詞（URL / アカウント名 / リソース名 / ARN）は記載前後に grep + 実コマンドで一貫性を確認する**
+4. **仕組みが事故を防げなかった時、個人を責めずに仕組みを直す（PDCAS の S は組織のシステムを対象とする）**
+
+### 15-3. タスク管理アプリでの教訓カードを継承
 
 タスク管理アプリの CLAUDE.md セクション 13 に記載されている事故事例（Claude Code が Terraform で本番環境を全削除した件）の教訓を本プロジェクトでも継承する。
 
@@ -362,6 +386,17 @@ AWS / Terraform を扱う AI コーディングツールが本番環境を破壊
 - `prevent_destroy` / `deletion_protection` を必ず設定
 - AI が「クリーンアップして」と言われた場合の解釈に注意
 - 便利さ（auto-approve）と安全性のトレードオフを意識する
+
+### 15-4. 振り返りタイミング（本プロジェクト完了時に必ず実行）
+
+`_templates/review-schedule.md` セクション A「各プロジェクト完了時」に従い、
+recipe-board の最終 PR マージ後に以下を実施する：
+
+- [ ] `docs/learning-notes.md` を読み返す
+- [ ] 抽象化できる学びを `_templates/lessons-learned/INDEX.md` に追加
+- [ ] 発生した事故を `_templates/incident-library/` に詳細記録
+- [ ] Pre-flight Check に追加すべき項目を反映
+- [ ] CLAUDE.md の改善点を次の新プロジェクト雛形に反映
 
 ---
 
