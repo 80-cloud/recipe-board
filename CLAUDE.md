@@ -11,7 +11,7 @@
 | 項目 | 内容 |
 |---|---|
 | プロジェクト名 | レシピ管理アプリ (recipe-board) |
-| リポジトリ | https://github.com/hideharu-AI/recipe-board |
+| リポジトリ | https://github.com/80-cloud/recipe-board |
 | バックエンド | Ruby 3.x + Ruby on Rails 7.x（API モード） |
 | フロントエンド | Nuxt 3（Vue.js 3 ベース）+ Tailwind CSS |
 | データベース | MySQL 8.x（Docker コンテナ） |
@@ -202,7 +202,7 @@ npm run dev  # デフォルトで 3001 番ポートで起動するよう設定
 リポジトリ作成後、以下を実行して保護設定を入れる。
 
 ```bash
-gh api repos/hideharu-AI/recipe-board/branches/main/protection \
+gh api repos/80-cloud/recipe-board/branches/main/protection \
   --method PUT \
   --header "Accept: application/vnd.github+json" \
   --input - <<'EOF'
@@ -235,10 +235,10 @@ EOF
 cat CLAUDE.md
 
 # 2. ブランチ保護が有効か確認
-gh api repos/hideharu-AI/recipe-board/branches/main/protection | python3 -m json.tool
+gh api repos/80-cloud/recipe-board/branches/main/protection | python3 -m json.tool
 
 # 3. ラベル一覧確認
-gh label list --repo hideharu-AI/recipe-board
+gh label list --repo 80-cloud/recipe-board
 ```
 
 ---

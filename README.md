@@ -88,7 +88,7 @@ recipe-board/
 
 ```bash
 # 1. リポジトリをクローン
-git clone https://github.com/hideharu-AI/recipe-board.git
+git clone https://github.com/80-cloud/recipe-board.git
 cd recipe-board
 
 # 2. MySQL を Docker で起動
