@@ -1,0 +1,44 @@
+# ============================================
+# .pre-commit-config.yaml — pre-commit hook 設定
+# ============================================
+# 目的: 機密情報（パスワード・API キー・トークン等）の誤コミットを自動ブロック。
+# 経緯: task-board (前プロジェクト) で application.yml に DB パスワードを平文ハードコード
+#       して Public リポジトリに push した不可逆事故が発生。これを再発させないために導入。
+#
+# 使い方:
+#   1. pre-commit をインストール: brew install pre-commit
+#   2. gitleaks をインストール: brew install gitleaks
+#   3. リポジトリにフックを登録: pre-commit install
+#   4. 以後、git commit 時に自動でスキャンが走る
+#
+# 緊急時の脱出口（誤検知の場合のみ・通常は使わない）:
+#   git commit --no-verify  ← フックをバイパス
+# ※ 本当に必要な場合のみ使用。bypass した内容は別途レビュー必須。
+#
+# CLAUDE.md セクション 15-3 デプロイ前チェックリストと連動。
+# ============================================
+
+repos:
+  # gitleaks: 機密情報スキャン
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+        name: gitleaks（機密情報スキャン）
+        description: パスワード・API キー・トークン等の誤コミットを検知
+
+  # 標準的なファイルチェック
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        name: 行末空白の削除
+      - id: end-of-file-fixer
+        name: ファイル末尾の改行確認
+      - id: check-yaml
+        name: YAML 構文チェック
+      - id: check-merge-conflict
+        name: マージコンフリクトマーカーの検知
+      - id: check-added-large-files
+        name: 大きすぎるファイルの検知
+        args: ['--maxkb=500']
