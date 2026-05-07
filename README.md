@@ -91,20 +91,38 @@ recipe-board/
 git clone https://github.com/80-cloud/recipe-board.git
 cd recipe-board
 
-# 2. MySQL を Docker で起動
+# 2. 環境変数を設定（初回のみ）
+cp .env.example .env
+# .env を編集して実際の値を記入（パスワード等）
+
+# 3. pre-commit hook を有効化（開発者のみ・読むだけなら不要）
+brew install pre-commit gitleaks
+pre-commit install
+
+# 4. MySQL を Docker で起動
 docker-compose up -d
 
-# 3. バックエンド（Rails）を起動
+# 5. バックエンド（Rails）を起動
 cd backend
 bundle install
 rails db:migrate
 rails s -p 3000
 
-# 4. フロントエンド（Nuxt）を起動
+# 6. フロントエンド（Nuxt）を起動
 cd frontend
 npm install
 npm run dev
 ```
+
+### 機密情報の取り扱い（重要）
+
+本リポジトリでは前プロジェクトでの機密情報漏洩事故の教訓を踏まえ、**pre-commit hook で機密情報を自動スキャン**しています。
+
+- パスワード・API キー・トークン等を `.env` 以外に書かないこと
+- `.env` は `.gitignore` で除外済み（コミットされない）
+- `git commit` 時に gitleaks が自動で検知してブロック
+
+**閲覧目的でクローンする場合は pre-commit のインストールは不要**（読むだけなら影響なし）。
 
 ---
 

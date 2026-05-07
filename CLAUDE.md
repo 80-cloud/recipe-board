@@ -176,6 +176,12 @@ Issue・PR には必ずラベルを付けること。
 10. **`aws *delete*` `aws *terminate*` `aws s3 rb*` を本人の明示承認なしに実行しない**
 11. **本番データベース・バックアップを削除する操作は、AI 単独で完結させない**（必ず人間の承認をはさむ）
 12. **タスク管理アプリ (hideharu-AI/Cursor) の AWS リソースに触らない**（同一 AWS アカウント内に存在する場合）
+13. **「学習用」「講座用」「教材」「課題」発言時は、実装案を独自判断で出さない**（前プロジェクトで AI が学習文脈を実務経験で上書きしてチェックポイントをスキップした事故あり）。必ず以下を確認：
+    - 講座のシラバス・到達点
+    - ゴール画面（Welcome page 等の視覚的チェックポイント）
+    - 現在の進捗位置
+    - 講座の方針（手作業重視 / IaC 重視 / 設定ファイル重視）
+    - 講座と異なる方法を提案する場合は**選択肢として明示**（押し付け禁止）
 
 ---
 
@@ -397,7 +403,7 @@ AWS / Terraform を扱う AI コーディングツールが本番環境を破壊
 ## 15. 全プロジェクト共通教訓と振り返り
 
 > **注意（リポジトリ閲覧者向け）:**
-> 本プロジェクトは開発者個人の **20 アプリ開発計画** の一部であり、
+> 本プロジェクトは開発者個人の **継続的なアプリ開発（規模を問わず）** の一部であり、
 > 開発者の手元 PC には全プロジェクト共通の学習リソース（横断学習システム）が併用されている。
 > ただし**本リポジトリは単独で完結する仕様**であり、外部リソースが無くても運用可能。
 > 横断システムの詳細は `OPERATIONS.md`（本リポジトリの運用方針）を参照。
@@ -413,14 +419,99 @@ AWS / Terraform を扱う AI コーディングツールが本番環境を破壊
 
 ### 15-2. タスク管理アプリ（前プロジェクト）からの教訓継承
 
-前プロジェクト（hideharu-AI/Cursor タスク管理アプリ）で起きた事故事例（Claude Code が Terraform で本番環境を全削除した件）の教訓を本プロジェクトでも継承する。
+前プロジェクト [80-cloud/hideharu-AI](https://github.com/80-cloud/hideharu-AI) で実際に発生した事故 6 件と、業界事例の合計 7 件の教訓を継承する。
+
+#### 15-2-A. 機密情報漏洩（🔴 不可逆 - 最重要）
+
+`application.yml` に **DB パスワードを平文ハードコードして Public リポジトリに push** した事故が前プロジェクトで発生。Git 履歴に永久に残存（即時削除不可）。
+
+**継承する対策**:
+- 設定ファイル（database.yml / application.yml / .env 等）に**直値の credentials を書かない**
+- 環境変数 `${VAR:default}` 形式で必ず外部化
+- `.env` は必ず `.gitignore` 対象
+- pre-commit hook で機密情報スキャン（gitleaks）
+
+#### 15-2-B. クロスレイヤー整合性
+
+- ランタイム（Ruby / Node）のバージョンは `Gemfile` / `package.json` 指定と実機インストールを必ず一致
+- デプロイ前にバージョン台帳で照合
+
+#### 15-2-C. リソース計画
+
+- インスタンス選定はメモリ要求合計 + 30% で計算
+- 同居サービス 3 つ以上なら swap 必須
+- 「無料枠」だけを最優先にしない
+
+#### 15-2-D. 環境固有設定のハードコード回避
+
+- CORS 許可オリジン / DB URL / API endpoint / S3 bucket は env-var 駆動に
+- `localhost` を ローカル開発のデフォルト値、本番は環境変数で上書き
+
+#### 15-2-E. OS 固有挙動
+
+- AWS Linux 2023 を使う場合は `curl-minimal` のプリインストールを意識
+- `dnf install` 前に `rpm -qa` で重複確認
+
+#### 15-2-F. AWS free tier 仕様の都度確認
+
+- `aws ec2 describe-instance-types --filters Name=free-tier-eligible,Values=true` で**最新の対象**を確認
+- 過去の知識（t2.micro = 無料）を流用しない（リージョン・年度で変わる）
+
+#### 15-2-G. 業界事例 - Claude Code Terraform destroy（不可逆事故）
 
 - バックアップは必ずクロスアカウントで保管（将来的に）
 - `prevent_destroy` / `deletion_protection` を必ず設定
 - AI が「クリーンアップして」と言われた場合の解釈に注意
 - 便利さ（auto-approve）と安全性のトレードオフを意識する
 
-### 15-3. 本プロジェクト完了時の振り返り
+#### 15-2-H. その他の前プロジェクト由来の警告
+
+- DB マイグレーションは冪等にする（再実行で失敗しない）
+- Safari / iPad など主要モバイルブラウザを別途検証
+- GET だけでなく POST/PUT/DELETE もブラウザで動作確認
+
+### 15-3. デプロイ前チェックリスト（Phase 4 着手時に必ず実行）
+
+前プロジェクト 6 incidents の教訓を組み込んだデプロイ前監査項目：
+
+#### 機密情報スキャン（🔴 最優先）
+
+- [ ] `grep -rE "(password|secret|api[_-]?key|token)" config/ src/` で平文 credentials が無いか
+- [ ] `${VAR:default}` 形式で環境変数化されているか
+- [ ] `.env` は `.gitignore` 対象か（`git check-ignore .env` で確認）
+- [ ] pre-commit hook の gitleaks が動作しているか
+- [ ] Public リポジトリに push する場合、Git 履歴にも機密情報が無いか（`git log --all -p | grep -i password`）
+
+#### バージョン整合性
+
+- [ ] Ruby バージョン: `Gemfile` の指定 vs `.ruby-version` vs 実機 `ruby -v` が一致
+- [ ] Node バージョン: `package.json` engines vs `.nvmrc` vs 実機 `node -v` が一致
+- [ ] Docker base image / EC2 user_data でインストールされるバージョンと一致
+
+#### リソース計画
+
+- [ ] 同居サービスのメモリ要求合計 = ?
+- [ ] インスタンス物理メモリ ≥ 要求合計 × 1.3 か
+- [ ] swap が必要か（同居サービス 3 つ以上 + Java/Ruby/Node なら推奨）
+
+#### 環境固有設定
+
+- [ ] CORS 許可オリジン: `localhost` だけになっていないか
+- [ ] DB 接続先: 環境変数化されているか
+- [ ] API endpoint URL: 環境変数化されているか
+
+#### AWS free tier 仕様
+
+- [ ] `aws ec2 describe-instance-types --filters Name=free-tier-eligible,Values=true` で対象を最新確認
+- [ ] AWS Budgets で月額上限アラート設定済み
+
+#### 動作確認の網羅性
+
+- [ ] GET だけでなく POST / PUT / DELETE もブラウザから検証
+- [ ] Safari / iPad / Android でも動作確認
+- [ ] エラー画面・空データ画面・ロード中画面も確認
+
+### 15-4. 本プロジェクト完了時の振り返り
 
 最終 PR マージ後に以下を実施する：
 
@@ -732,4 +823,3 @@ grep -rn -E "(github\.com/[^/]+/[^/[:space:]]+|aws.*amazon\.com|/Users/[^/[:spac
 - ⚠️ ユーザーが「ちょっと待って」「確認して」と言った時
 
 → 上記いずれかに該当したら、**書く手を止めて実コマンドで裏取り**してから再開する。
-
