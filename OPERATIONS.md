@@ -211,7 +211,135 @@ recipe-board/
 
 ---
 
-## 9. 自己完結性について
+## 9. 緊急時リカバリー手順
+
+将来の書き換えや誤操作で取り返しのつかない状態に陥った時の初動手順。
+**起きてからではなく、起きる前に手順を読んでおくこと**。
+
+### 9-1. 機密情報を誤って push した場合（🔴 最重要・不可逆）
+
+**前提**: いったん公開リポジトリに push されると、Git 履歴・GitHub のキャッシュ・fork に残るため**完全削除は不可能**。
+
+```bash
+# ① 即座に該当 credentials を無効化（最優先）
+#    - DB パスワードならデータベースで変更
+#    - API キーなら発行元で revoke
+#    - AWS キーなら IAM で deactivate
+
+# ② Git 履歴から削除（fork 等で残る前提）
+brew install git-filter-repo
+git filter-repo --path <該当ファイル> --invert-paths
+git push origin main --force-with-lease   # ※ enforce_admins を一時 false にする必要あり
+
+# ③ 後始末
+#    - incident-library に詳細記録
+#    - .pre-commit-config.yaml と .gitignore で同種事故の予防強化
+```
+
+### 9-2. main が汚染された場合（誤コミット・revert したい）
+
+```bash
+# ① 該当コミットを特定
+git -C /Users/macmini/Desktop/recipe-board log --oneline -10
+
+# ② revert 用のブランチを作成
+git -C /Users/macmini/Desktop/recipe-board checkout -b 'fix/#XX-revert-pollution'
+
+# ③ revert コミット作成（force-push は禁止）
+git -C /Users/macmini/Desktop/recipe-board revert <汚染コミット SHA>
+
+# ④ push → PR → squash-merge
+git -C /Users/macmini/Desktop/recipe-board push -u origin 'fix/#XX-revert-pollution'
+gh pr create --title "fix: 汚染コミットを revert" ...
+```
+
+### 9-3. CLAUDE.md / .pre-commit-config.yaml / .gitignore が破損した場合
+
+baseline タグから個別ファイル復元：
+
+```bash
+# ① 該当ファイルを baseline 時点に復元
+git -C /Users/macmini/Desktop/recipe-board checkout baseline-2026-05-08 -- CLAUDE.md
+# または
+git -C /Users/macmini/Desktop/recipe-board checkout baseline-2026-05-08 -- .pre-commit-config.yaml
+git -C /Users/macmini/Desktop/recipe-board checkout baseline-2026-05-08 -- .gitignore
+
+# ② 復元コミットを branch + PR で main に反映
+git -C /Users/macmini/Desktop/recipe-board checkout -b 'fix/#XX-restore-from-baseline'
+git -C /Users/macmini/Desktop/recipe-board commit -m "fix: baseline-2026-05-08 から復元"
+# → PR フローで main に反映
+```
+
+### 9-4. メモリが破損・消失した場合
+
+dev-templates の memory-backup から復元：
+
+```bash
+# ① dev-templates が無ければクローン
+cd ~/Desktop
+git clone https://github.com/80-cloud/dev-templates.git _templates
+
+# ② メモリディレクトリを復元
+mkdir -p ~/.claude/projects/-Users-macmini-Desktop-Cursor/memory
+cp ~/Desktop/_templates/memory-backup/*.md \
+   ~/.claude/projects/-Users-macmini-Desktop-Cursor/memory/
+
+# ③ Claude セッション再起動 → メモリが読まれることを確認
+```
+
+### 9-5. ブランチ保護が解除された場合
+
+CLAUDE.md セクション 8 のコマンドで再設定：
+
+```bash
+gh api repos/80-cloud/recipe-board/branches/main/protection \
+  --method PUT \
+  --header "Accept: application/vnd.github+json" \
+  --input - <<'EOF'
+{
+  "required_status_checks": null,
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": false,
+    "required_approving_review_count": 0
+  },
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+EOF
+```
+
+設定変更の経緯を Issue に記録すること。
+
+### 9-6. dev-templates が誤って public になった場合
+
+```bash
+# ① 即 private に戻す
+gh repo edit 80-cloud/dev-templates --visibility private --accept-visibility-change-consequences
+
+# ② 公開期間中の影響評価
+#    - Google Search Console でインデックス状況確認
+#    - 公開されていた間に fork されていないか
+#    - 含まれていた個人情報の有無確認
+#    - 必要なら GitHub サポートにキャッシュ削除依頼
+```
+
+### 9-7. baseline タグの再作成が必要な場合
+
+仕組みを大幅に再構築した後、新しい "good state" を baseline にする：
+
+```bash
+git -C /Users/macmini/Desktop/recipe-board tag -a baseline-YYYY-MM-DD -m "..."
+git -C /Users/macmini/Desktop/recipe-board push origin baseline-YYYY-MM-DD
+
+# 旧 baseline は削除せず保持（過去の良好な状態として参照可能）
+```
+
+---
+
+## 10. 自己完結性について
 
 **本リポジトリは外部の個人リソースに依存せず、単独で運用可能**。
 
@@ -222,7 +350,7 @@ recipe-board/
 
 ---
 
-## 10. お問い合わせ
+## 11. お問い合わせ
 
 開発者: hideharu-AI（GitHub: [@80-cloud](https://github.com/80-cloud)）
 
