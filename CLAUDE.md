@@ -201,6 +201,11 @@ Issue・PR には必ずラベルを付けること。
     - 現在の進捗位置
     - 講座の方針（手作業重視 / IaC 重視 / 設定ファイル重視）
     - 講座と異なる方法を提案する場合は**選択肢として明示**（押し付け禁止）
+14. **本体（Rails / Nuxt 等のアプリサーバー）を起動して挙動を観察する検証は、事前申告 + 承認なしに実行しない**（[scout-drone-protocol v3.1](docs/test-protocols/scout-drone-protocol.md) の本体起動申告ルール）。対象操作:
+    - `bin/rails s` / `bin/rails runner` で**アプリ全体を boot** する操作
+    - `npm run dev` / `npm run preview` 後の起動
+    - `curl` で**本体エンドポイント**を叩く操作
+    - 「ドローン」と称して本体起動を伴う操作を行うことは禁止（scout-drone は既存環境のみ対象）
 
 ---
 
