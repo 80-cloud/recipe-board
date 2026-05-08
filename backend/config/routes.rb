@@ -4,6 +4,6 @@ Rails.application.routes.draw do
 
   # API は /api 配下に集約（画面設計書 4-1〜4-4 の /api/recipes 系と整合）
   namespace :api do
-    resources :recipes, only: [ :index, :show, :destroy ]
+    resources :recipes, only: [ :index, :show, :create, :destroy ]
   end
 end

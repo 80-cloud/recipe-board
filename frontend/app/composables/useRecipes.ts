@@ -1,4 +1,4 @@
-import type { RecipeSummary, RecipeDetail } from '~/types/recipe'
+import type { RecipeSummary, RecipeDetail, RecipeInput } from '~/types/recipe'
 
 /**
  * レシピ一覧を取得する composable（S-01 用）
@@ -55,5 +55,23 @@ export async function deleteRecipe(id: number): Promise<void> {
 
   await $fetch(`${apiBase}/recipes/${id}`, {
     method: 'DELETE',
+  })
+}
+
+/**
+ * レシピ新規登録（S-03 用）
+ *
+ * 奇襲囮で確認した教訓:
+ *   - 成功時 201 + 完全な詳細 JSON（RecipeDetail）が返る
+ *   - 失敗時 422 + { errors: { title: [...], ... } } が返る
+ *   - $fetch は 4xx/5xx で throw する → catch で error.data.errors を取り出す
+ */
+export async function createRecipe(input: RecipeInput): Promise<RecipeDetail> {
+  const config = useRuntimeConfig()
+  const apiBase = config.public.apiBase
+
+  return await $fetch<RecipeDetail>(`${apiBase}/recipes`, {
+    method: 'POST',
+    body: { recipe: input },
   })
 }
