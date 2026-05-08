@@ -69,14 +69,12 @@ async function onConfirmDelete() {
           </p>
 
           <div class="mt-4 flex gap-2">
-            <button
-              type="button"
-              disabled
-              class="cursor-not-allowed rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-500"
-              title="次の Issue (S-04) で実装予定"
+            <NuxtLink
+              :to="`/recipes/${recipe.id}/edit`"
+              class="rounded-md border border-blue-300 bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
             >
               編集
-            </button>
+            </NuxtLink>
             <button
               type="button"
               class="rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
