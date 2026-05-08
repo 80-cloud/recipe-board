@@ -289,6 +289,38 @@ EOF
 > 個人リポジトリ（GitHub Free）では PR レビューの必須化ができない場合がある。
 > その場合は `"required_pull_request_reviews": null` に変更し、CLAUDE.md のルールで運用カバーする。
 
+### 8-2. タグ保護（baseline-* パターン）
+
+ブランチ保護は**タグには適用されない**ため、別途 GitHub Repository Rules (rulesets) でタグを保護する。
+特に `baseline-*` パターンのタグは「不変な rollback 目標」として削除・更新を禁止する：
+
+```bash
+gh api repos/80-cloud/recipe-board/rulesets \
+  --method POST \
+  --header "Accept: application/vnd.github+json" \
+  --input - <<'EOF'
+{
+  "name": "Protect baseline tags",
+  "target": "tag",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": ["refs/tags/baseline-*"],
+      "exclude": []
+    }
+  },
+  "rules": [
+    {"type": "deletion"},
+    {"type": "non_fast_forward"},
+    {"type": "update"}
+  ]
+}
+EOF
+```
+
+> **過去事故（D-6）**: ブランチ保護はタグに適用されない仕様を見落とし、baseline タグが削除可能な状態だった。
+> Tag protection rules（旧 API）は deprecated されており、現在は Repository Rules (rulesets) で管理する。
+
 ---
 
 ## 9. 検証方法
@@ -380,8 +412,27 @@ AWS / Terraform を扱う AI コーディングツールが本番環境を破壊
 ### 透明性の確保
 
 - 本リポジトリでの AI 利用は README に明記する
-- コミットメッセージに `Co-Authored-By: Claude` を残す（自動付与）
+- コミットメッセージに `Co-Authored-By: Claude` を残す（自動付与は不確実なため、以下のルールを遵守）
 - 設計判断・技術選定の議論は AI と相談して進めるが、**最終判断は人間が行う**
+
+### AI Attribution の運用ルール（2026-05-08 D-7 で追加）
+
+`gh pr merge --squash` のデフォルト挙動では PR 本文の `Co-authored-by:` trailer が**落ちる場合がある**ため、以下を必ず実施：
+
+1. **コミット時**：`git commit -m "..."` の本文末尾に `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>` を含める
+2. **PR 作成時**：PR 本文の末尾にも同 trailer を含める（squash merge の本文ソースになるため）
+3. **PR 本文の例**：
+   ```
+   ...本文...
+
+   ---
+
+   Co-authored-by: Claude Opus 4.7 <noreply@anthropic.com>
+   ```
+4. **マージ時**：`gh pr merge --squash` で merge（GitHub が trailer を検出して main 上のコミットに保持）
+
+> **過去事故（D-7）**：23 コミット中 6 件のみ Co-Authored-By が残存（74% で attribution 落ち）。
+> 過去 commits の修正は force-push 禁止のため**不可**。今後の commit でこのルールを遵守する。
 
 ### 学習姿勢
 
