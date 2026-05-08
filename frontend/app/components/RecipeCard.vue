@@ -15,10 +15,11 @@ function formatDate(iso: string): string {
 </script>
 
 <template>
-  <article
-    class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+  <NuxtLink
+    :to="`/recipes/${recipe.id}`"
+    class="block rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400"
   >
     <h2 class="text-lg font-bold text-gray-900">{{ recipe.title }}</h2>
     <p class="mt-2 text-sm text-gray-500">{{ formatDate(recipe.created_at) }}</p>
-  </article>
+  </NuxtLink>
 </template>
