@@ -1,0 +1,57 @@
+# ============================================
+# Frontend CI — Nuxt build / lock file 整合性
+# ============================================
+# 目的:
+#   CRUD 期間中に Vue / TypeScript ファイルが増えるほど、後から CI を
+#   足した時の初回失敗が大きくなる（N-4 / Phase G v2 で検出）。
+#   CRUD 着手前にビルド可能性の最小ゲートを敷くため設置。
+#
+# 検証内容:
+#   - npm ci         → package-lock.json と package.json の整合性
+#   - npm run build  → 全モジュール解決 / Vue テンプレートコンパイル /
+#                      Nuxt 内部 TypeScript 処理 / Tailwind 設定 /
+#                      静的アセット生成 を一括検証
+#
+# 範囲外（将来別 Issue で対応）:
+#   - ESLint / Prettier
+#   - vue-tsc / nuxi typecheck
+#   - Vitest / Playwright
+#
+# サブディレクトリ構成への対応:
+#   - run: 系ステップは defaults.run.working-directory で frontend/ に固定
+#   - actions/setup-node の node-version-file はリポジトリルート起点
+#   - cache-dependency-path も同じくリポジトリルート起点
+# ============================================
+
+name: Frontend CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies (lock file 整合性検証)
+        run: npm ci
+
+      - name: Build Nuxt application
+        run: npm run build
