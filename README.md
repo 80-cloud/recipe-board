@@ -143,6 +143,31 @@ docker compose stop
 docker compose down -v
 ```
 
+### Production build の起動運用（提出 / デプロイ用）
+
+開発時は `bin/rails s` + `npm run dev` で十分。Production build を確認する場合は以下：
+
+```bash
+# 1. Frontend を build
+cd frontend
+npm run build
+
+# 2. Rails dev を 3000 で起動
+cd ../backend
+bin/rails s -p 3000 -d
+
+# 3. Nuxt prod を 3002 で起動（3001 と分けて衝突回避）
+cd ../frontend
+NUXT_PUBLIC_API_BASE=http://localhost:3000/api NITRO_PORT=3002 \
+  node .output/server/index.mjs
+```
+
+**注意**:
+
+- `NUXT_PUBLIC_API_BASE` は Nuxt 起動時の環境変数で**実行時に解決**される（build に焼き込まれない）。本番デプロイで API URL が変わる場合は起動時に再指定すること。
+- `NITRO_PORT` を指定しないと Nuxt prod は port 3000 で起動し Rails と衝突する。dev (3001) との混在も避けるため 3002 推奨。
+- `Nuxt DevTools` は `nuxt.config.ts` で `devtools: { enabled: false }` に設定済み。これは [vue-router 5 hydration クラッシュ事故](../_templates/incident-library/2026-05-09-nuxt-devtools-vue-router-hydration.md)への対処。
+
 ### 機密情報の取り扱い（重要）
 
 本リポジトリでは前プロジェクトでの機密情報漏洩事故の教訓を踏まえ、**pre-commit hook で機密情報を自動スキャン**しています。
