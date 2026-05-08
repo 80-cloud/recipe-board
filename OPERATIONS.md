@@ -337,6 +337,19 @@ git -C /Users/macmini/Desktop/recipe-board push origin baseline-YYYY-MM-DD
 # 旧 baseline は削除せず保持（過去の良好な状態として参照可能）
 ```
 
+### 9-8. baseline タグは「不変」— タグ保護の根拠
+
+baseline タグは Repository Rules (rulesets) で **削除・更新・force-push が禁止** されている（CLAUDE.md セクション 8-2 参照）。
+
+これにより以下が**できない**：
+- `git push --delete origin baseline-2026-05-08`
+- `git tag -f baseline-2026-05-08 <別の commit>` を push
+- `git push --force origin baseline-2026-05-08`
+
+意図的に baseline を更新する場合は、**新しい日付の tag を別名で作る**（旧 baseline は保持）。
+
+> **過去事故（D-6）**: 当初、ブランチ保護がタグに適用されると誤解していた。Phase D テストで判明し、Repository Rules を追加して修正済。
+
 ---
 
 ## 10. 自己完結性について
