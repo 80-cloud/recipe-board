@@ -146,6 +146,25 @@ Closes #5
 - **必ず関連 Issue を `Closes #番号` で本文にリンクすること**
 - **main ブランチへのマージ方法: Squash and merge（スカッシュマージ）を使うこと**
 - PR のタイトルはコミットメッセージと同じ形式にすること: `種別: 説明`
+- **PR 作成時は必ず `--label` を付与すること**（Issue ラベルは PR に自動継承されないため）
+
+### 推奨コマンド（gh CLI で PR 作成時）
+
+```bash
+# ラベル必須（CLAUDE.md セクション 5 のラベルから 1 つ以上）
+gh pr create \
+  --title "種別: 説明" \
+  --label "chore"  \
+  --body "..."
+
+# 複数ラベルもOK
+gh pr create \
+  --title "..." \
+  --label "documentation,chore" \
+  --body "..."
+```
+
+> **過去事故（2026-05-08 Phase C テスト C-7 で発見）**: PR 作成時に `--label` を渡し忘れ、6 PR 連続でラベル無し状態だった。Issue ラベルは PR に自動継承されないため、明示指定が必須。
 
 ---
 

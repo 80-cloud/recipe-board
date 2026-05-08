@@ -34,8 +34,10 @@ useDefault = true
 # ============================================
 [[rules]]
 id = "common-password-pattern"
-description = "Common low-entropy password / secret / api_key patterns (entropy-independent)"
-regex = '''(?i)(password|passwd|pwd|secret|api[_-]?key|token)\s*[:=]\s*['"]?[a-zA-Z0-9_]{3,}['"]?'''
+description = "Common low-entropy password / secret / api_key patterns (entropy-independent). Supports YAML / TOML / JSON / .env formats."
+# キーワード直後の ["']? は JSON `"password": "value"` 形式に対応するため
+# (Phase C テスト C-1 で JSON 形式が検知されない問題を発見し追加)
+regex = '''(?i)(password|passwd|pwd|secret|api[_-]?key|token)["']?\s*[:=]\s*['"]?[a-zA-Z0-9_]{3,}['"]?'''
 keywords = ["password", "passwd", "secret", "api_key", "api-key", "token"]
 
 # このルールに対する allowlist（誤検知を抑制）
