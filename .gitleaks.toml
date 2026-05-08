@@ -1,0 +1,70 @@
+# ============================================
+# .gitleaks.toml — gitleaks カスタムルール
+# ============================================
+# 目的: gitleaks のデフォルトルールはエントロピーベースのため、
+#       低エントロピー secret（弱パスワード・短い単語・デフォルト値）が
+#       検知できない。これは task-board (前プロジェクト) で起きた
+#       平文パスワード Public 流出事故 (`password: taskboard`) と同型の
+#       不可逆事故が再発しうることを意味する。
+#       本ファイルは低エントロピーパターンを追加検知する。
+#
+# 動作:
+#   - gitleaks がリポジトリルートにある .gitleaks.toml を自動読み込み
+#   - extend.useDefault = true でデフォルトルールも維持
+#   - common-password-pattern ルールでキーワードベース検知を追加
+#   - allowlist で環境変数参照やテンプレートプレースホルダーを除外
+#
+# 関連:
+#   - .pre-commit-config.yaml: ローカル commit 時に発火
+#   - .github/workflows/gitleaks.yml: server-side 発火
+#   - .env.example: 環境変数雛形（CHANGE_ME を allowlist で除外）
+#
+# 動作確認済（PR #X で検証）:
+#   - `password: taskboard` → ✅ 検知
+#   - `password = "password"` → ✅ 検知
+#   - `DATABASE_PASSWORD=CHANGE_ME` → ✅ 誤検知されない
+#   - `CORS_ALLOWED_ORIGINS=${CORS_VAR}` → ✅ 誤検知されない
+# ============================================
+
+[extend]
+useDefault = true
+
+# ============================================
+# カスタムルール: 低エントロピーパスワード検知
+# ============================================
+[[rules]]
+id = "common-password-pattern"
+description = "Common low-entropy password / secret / api_key patterns (entropy-independent)"
+regex = '''(?i)(password|passwd|pwd|secret|api[_-]?key|token)\s*[:=]\s*['"]?[a-zA-Z0-9_]{3,}['"]?'''
+keywords = ["password", "passwd", "secret", "api_key", "api-key", "token"]
+
+# このルールに対する allowlist（誤検知を抑制）
+[rules.allowlist]
+regexTarget = "line"
+regexes = [
+    # テンプレートプレースホルダー
+    '''CHANGE_ME''',
+    '''YOUR_[A-Z_]+''',
+    '''<[A-Z_]+>''',
+    '''XXX+''',
+    '''placeholder''',
+    '''example''',
+
+    # 環境変数参照
+    '''\$\{[A-Z_]+\}''',
+    '''\$ENV\[''',
+    '''ENV\[''',
+    '''process\.env\.''',
+    '''ENV\.fetch''',
+
+    # コメント・ドキュメント
+    '''^\s*#''',
+    '''^\s*//''',
+    '''^\s*\*''',
+
+    # テストファイル（テスト中の偽 secret は許容）
+    '''test/''',
+    '''spec/''',
+    '''_test\.''',
+    '''_spec\.''',
+]
