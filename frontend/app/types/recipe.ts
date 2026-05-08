@@ -37,3 +37,33 @@ export interface RecipeDetail extends RecipeSummary {
   ingredients: Ingredient[]
   steps: Step[]
 }
+
+/**
+ * 新規登録 / 編集フォーム用の入力型（S-03 / S-04）
+ * 既存レコードは id 付き、新規行は id 無し。
+ * MVP ではフロント側の position は配列 index + 1 で submit 直前に再採番。
+ */
+export interface IngredientInput {
+  id?: number
+  name: string
+  quantity: string
+  position: number
+}
+
+export interface StepInput {
+  id?: number
+  description: string
+  position: number
+}
+
+export interface RecipeInput {
+  title: string
+  ingredients_attributes: IngredientInput[]
+  steps_attributes: StepInput[]
+}
+
+/**
+ * バックエンド errors.as_json の構造（ドローン D-3 で確認済）
+ * 例: { title: ["can't be blank"] }
+ */
+export type ValidationErrors = Record<string, string[]>
