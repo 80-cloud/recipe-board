@@ -1,4 +1,4 @@
-import type { RecipeSummary } from '~/types/recipe'
+import type { RecipeSummary, RecipeDetail } from '~/types/recipe'
 
 /**
  * レシピ一覧を取得する composable（S-01 用）
@@ -22,4 +22,38 @@ export function useRecipeList() {
   )
 
   return { recipes: data, pending, error, refresh }
+}
+
+/**
+ * レシピ詳細を取得する composable（S-02 用）
+ *
+ * ドローン投下で確認した教訓:
+ *   - error.value?.statusCode のみで分岐（body スキーマに依存しない）
+ *   - dev モードと production モードで 404 body 形式が異なるため
+ */
+export function useRecipeDetail(id: string | number) {
+  const config = useRuntimeConfig()
+  const apiBase = config.public.apiBase
+
+  const { data, pending, error, refresh } = useFetch<RecipeDetail>(
+    `${apiBase}/recipes/${id}`,
+    {
+      key: `recipe-${id}`,
+    },
+  )
+
+  return { recipe: data, pending, error, refresh }
+}
+
+/**
+ * レシピ削除（S-02 削除モーダル経由）
+ * 成功時 204 No Content（body なし）
+ */
+export async function deleteRecipe(id: number): Promise<void> {
+  const config = useRuntimeConfig()
+  const apiBase = config.public.apiBase
+
+  await $fetch(`${apiBase}/recipes/${id}`, {
+    method: 'DELETE',
+  })
 }
