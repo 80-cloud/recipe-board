@@ -31,18 +31,8 @@ test:
   database: <%= ENV.fetch("DATABASE_NAME_TEST", "recipe_board_test") %>
 
 production:
-  primary: &primary_production
-    <<: *default
-    database: <%= ENV.fetch("DATABASE_NAME", "recipe_board_production") %>
-  cache:
-    <<: *primary_production
-    database: <%= ENV.fetch("DATABASE_NAME_CACHE", "recipe_board_production_cache") %>
-    migrations_paths: db/cache_migrate
-  queue:
-    <<: *primary_production
-    database: <%= ENV.fetch("DATABASE_NAME_QUEUE", "recipe_board_production_queue") %>
-    migrations_paths: db/queue_migrate
-  cable:
-    <<: *primary_production
-    database: <%= ENV.fetch("DATABASE_NAME_CABLE", "recipe_board_production_cable") %>
-    migrations_paths: db/cable_migrate
+  <<: *default
+  database: <%= ENV.fetch("DATABASE_NAME", "recipe_board_production") %>
+  # 注: Solid Cache / Solid Queue / Solid Cable は MVP で使用しない（無料枠制約）。
+  # cache_store は memory_store / Active Job は :async / Action Cable は :async
+  # で運用するため cache / queue / cable サブ DB は不要（1 DB 構成）。

@@ -75,12 +75,14 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  #
+  # DNS rebinding protection: ENV 駆動で許可ホストを設定（Phase 4 デプロイで EC2 EIP / domain を渡す）
+  # 例: RAILS_HOSTS="54.150.151.67,recipe-board.example.com"
+  # 未設定時は空配列で全許可しない（厳格動作）。
+  hosts_csv = ENV.fetch("RAILS_HOSTS", "")
+  unless hosts_csv.empty?
+    config.hosts.concat(hosts_csv.split(",").map(&:strip))
+  end
+
   # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end
