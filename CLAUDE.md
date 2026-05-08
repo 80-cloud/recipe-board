@@ -429,7 +429,7 @@ AWS / Terraform を扱う AI コーディングツールが本番環境を破壊
 - 設定ファイル（database.yml / application.yml / .env 等）に**直値の credentials を書かない**
 - 環境変数 `${VAR:default}` 形式で必ず外部化
 - `.env` は必ず `.gitignore` 対象
-- pre-commit hook で機密情報スキャン（gitleaks）
+- pre-commit hook で機密情報スキャン（gitleaks + 低エントロピー対応のカスタムルール `.gitleaks.toml`）
 
 #### 15-2-B. クロスレイヤー整合性
 
@@ -479,7 +479,8 @@ AWS / Terraform を扱う AI コーディングツールが本番環境を破壊
 - [ ] `grep -rE "(password|secret|api[_-]?key|token)" config/ src/` で平文 credentials が無いか
 - [ ] `${VAR:default}` 形式で環境変数化されているか
 - [ ] `.env` は `.gitignore` 対象か（`git check-ignore .env` で確認）
-- [ ] pre-commit hook の gitleaks が動作しているか
+- [ ] pre-commit hook の gitleaks が動作しているか（`.gitleaks.toml` のカスタムルールが効くこと）
+- [ ] `password: <値>` 形式の平文 credential（task-board 同型）が検知されることを過去事故サンプルで確認
 - [ ] Public リポジトリに push する場合、Git 履歴にも機密情報が無いか（`git log --all -p | grep -i password`）
 
 #### バージョン整合性
