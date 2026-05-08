@@ -11,6 +11,6 @@ class CreateIngredients < ActiveRecord::Migration[8.1]
     end
 
     # 複合インデックス: 材料の表示順取得を高速化（DB設計書 4）
-    add_index :ingredients, [:recipe_id, :position], name: "idx_ingredients_recipe_position"
+    add_index :ingredients, [ :recipe_id, :position ], name: "idx_ingredients_recipe_position"
   end
 end
