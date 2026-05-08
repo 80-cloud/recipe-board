@@ -52,7 +52,7 @@
 |---|---|
 | プロジェクト名 | レシピ管理アプリ (recipe-board) |
 | リポジトリ | https://github.com/80-cloud/recipe-board |
-| バックエンド | Ruby 3.x + Ruby on Rails 7.x（API モード） |
+| バックエンド | Ruby 3.4.9 + Ruby on Rails 8.1.3（API モード） |
 | フロントエンド | Nuxt 3（Vue.js 3 ベース）+ Tailwind CSS |
 | データベース | MySQL 8.x（Docker コンテナ） |
 | 本番デプロイ | AWS EC2 + RDS（無料枠） |

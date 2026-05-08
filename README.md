@@ -21,7 +21,7 @@
 
 ### バックエンド
 - **言語**: Ruby 3.x
-- **フレームワーク**: Ruby on Rails 7.x（API モード）
+- **フレームワーク**: Ruby on Rails 8.1.3（API モード）
 - **DB**: MySQL 8.x（Docker コンテナ）
 
 ### フロントエンド
@@ -84,7 +84,7 @@ recipe-board/
 - Ruby 3.x（rbenv 等で管理）
 - Node.js v22 以上
 
-### ローカル起動（予定）
+### ローカル起動
 
 ```bash
 # 1. リポジトリをクローン
@@ -94,24 +94,53 @@ cd recipe-board
 # 2. 環境変数を設定（初回のみ）
 cp .env.example .env
 # .env を編集して実際の値を記入（パスワード等）
+# Rails の SECRET_KEY_BASE は `cd backend && bundle exec rails secret` で生成
 
 # 3. pre-commit hook を有効化（開発者のみ・読むだけなら不要）
 brew install pre-commit gitleaks
 pre-commit install
 
-# 4. MySQL を Docker で起動
-docker-compose up -d
+# 4. Ruby 3.4.9 をインストール（rbenv 使用）
+brew install rbenv ruby-build
+echo 'eval "$(rbenv init - --no-rehash zsh)"' >> ~/.zshrc
+source ~/.zshrc
+rbenv install 3.4.9
+rbenv global 3.4.9
+gem install bundler rails
 
-# 5. バックエンド（Rails）を起動
+# 5. MySQL を Docker で起動（初回起動時に権限付与スクリプトが自動実行）
+docker compose up -d
+
+# 6. バックエンド（Rails）を起動
 cd backend
 bundle install
-rails db:migrate
-rails s -p 3000
+bin/rails db:create db:migrate
+bin/rails s -p 3000
 
-# 6. フロントエンド（Nuxt）を起動
+# 7. フロントエンド（Nuxt）を起動（別ターミナル）
 cd frontend
 npm install
 npm run dev
+# → http://localhost:3001 でアクセス
+```
+
+### 起動確認
+
+| サービス | URL | 期待値 |
+|---|---|---|
+| Rails (API) | http://localhost:3000 | HTTP 200（Rails welcome page） |
+| Nuxt (Frontend) | http://localhost:3001 | HTTP 200（Nuxt welcome page） |
+| MySQL | port 3306 | docker ps で `(healthy)` 表示 |
+
+### 停止
+
+```bash
+# Rails / Nuxt は Ctrl+C で停止
+# MySQL を停止（データは保持）
+docker compose stop
+
+# MySQL を停止 + データ削除（⚠️ 開発データ消失）
+docker compose down -v
 ```
 
 ### 機密情報の取り扱い（重要）

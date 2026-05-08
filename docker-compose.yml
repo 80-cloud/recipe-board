@@ -1,0 +1,52 @@
+# ============================================
+# docker-compose.yml — recipe-board 開発環境
+# ============================================
+# 目的: ローカル開発用に MySQL 8 を起動。
+#       環境変数は .env から読み込む（.env.example をコピーして使用）
+#
+# 起動: docker-compose up -d
+# 停止: docker-compose down
+# データを残したまま停止: docker-compose stop
+# データごと削除: docker-compose down -v  ← ⚠️ 開発データが消える
+#
+# ポート: 3306（CLAUDE.md セクション 10 のポート規約に従う）
+# task-board の PostgreSQL（port 5432）とは衝突しないが、
+# リソース逼迫時は task-board の DB を一時停止する運用が可能
+# （OPERATIONS.md 関連注記参照）
+# ============================================
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: recipe-board-mysql
+    restart: unless-stopped
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${DATABASE_NAME:-recipe_board_development}
+      MYSQL_USER: ${DATABASE_USERNAME:-recipe_user}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD:-recipepass}
+
+    ports:
+      - "${DATABASE_PORT:-3306}:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # 初回起動時に権限付与スクリプトを実行（DB:create db:migrate のため）
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+
+    # ヘルスチェック: Rails が接続できる状態まで待つ
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+    # 文字コードを utf8mb4 に統一（DB設計書セクション 1-2）
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+
+volumes:
+  mysql_data:
+    name: recipe-board-mysql-data

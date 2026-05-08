@@ -83,7 +83,7 @@ Closes #(Issue番号)
 
 | レイヤー | 採用技術 | 選定理由 |
 |---|---|---|
-| バックエンド | Ruby 3.x + Ruby on Rails 7.x（API モード） | 前プロジェクト（Java/Spring Boot）と異なる言語・FW で学習効果を最大化 |
+| バックエンド | Ruby 3.4.9 + Ruby on Rails 8.1.3（API モード） | 前プロジェクト（Java/Spring Boot）と異なる言語・FW で学習効果を最大化。Rails 8.1 は新機能（Solid Cache/Queue/Cable・Propshaft）を含む最新版 |
 | フロントエンド | Nuxt 3（Vue.js 3 ベース）+ Tailwind CSS | 前プロジェクト（React）と異なる FW で新規学習 |
 | データベース | MySQL 8.x | 前プロジェクト（PostgreSQL）と異なる RDB |
 | インフラ | AWS EC2 + RDS（無料枠） | デプロイ経験の継続学習 |

@@ -1,0 +1,48 @@
+# ============================================
+# database.yml — Rails DB 接続設定
+# ============================================
+# task-board (前プロジェクト) で発生した「平文パスワードを Public リポジトリに
+# push」の不可逆事故を踏まえ、credentials は最初から **環境変数駆動**。
+#
+# .env.example をコピーして .env を作成すること（.env は .gitignore で除外）
+#
+# 関連:
+#   - DB 設計書 セクション 11（セキュリティ）
+#   - CLAUDE.md セクション 15-2-A（機密情報漏洩予防）
+#   - .gitleaks.toml（コミット時の機密情報検知）
+# ============================================
+
+default: &default
+  adapter: mysql2
+  encoding: utf8mb4
+  collation: utf8mb4_unicode_ci
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host:     <%= ENV.fetch("DATABASE_HOST",     "127.0.0.1") %>
+  port:     <%= ENV.fetch("DATABASE_PORT",     "3306") %>
+  username: <%= ENV.fetch("DATABASE_USERNAME", "recipe_user") %>
+  password: <%= ENV.fetch("DATABASE_PASSWORD") { raise "DATABASE_PASSWORD must be set in .env" } %>
+
+development:
+  <<: *default
+  database: <%= ENV.fetch("DATABASE_NAME", "recipe_board_development") %>
+
+test:
+  <<: *default
+  database: <%= ENV.fetch("DATABASE_NAME_TEST", "recipe_board_test") %>
+
+production:
+  primary: &primary_production
+    <<: *default
+    database: <%= ENV.fetch("DATABASE_NAME", "recipe_board_production") %>
+  cache:
+    <<: *primary_production
+    database: <%= ENV.fetch("DATABASE_NAME_CACHE", "recipe_board_production_cache") %>
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *primary_production
+    database: <%= ENV.fetch("DATABASE_NAME_QUEUE", "recipe_board_production_queue") %>
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *primary_production
+    database: <%= ENV.fetch("DATABASE_NAME_CABLE", "recipe_board_production_cable") %>
+    migrations_paths: db/cable_migrate
