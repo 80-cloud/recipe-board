@@ -403,6 +403,12 @@ AWS / Terraform を扱う AI コーディングツールが本番環境を破壊
 - 開発時の運用ルール: **使わない方の EC2 / RDS は停止しておく**
 - 提出期間中はレシピアプリのみ起動、タスク管理アプリは停止する
 
+### Phase G v2 テストプロトコルと preflight-check.sh（2026-05-08 #31 で追加）
+
+CRUD 着手前 / PR 提出前 / 講師提出前は **`bash scripts/preflight-check.sh`** を実行し ERRORS 0 を確認する。詳細とチェック項目は [`docs/test-protocols/phase-g-v2.md`](docs/test-protocols/phase-g-v2.md) を参照。
+
+このプロトコル自体も形骸化しうるため、`_templates/anti-formality-mechanism.md` の原則に従い、新発見があった都度更新義務がある（**テストプロトコルの進化義務**）。
+
 ---
 
 ## 13. AI 利用に関する方針（提出物として）
