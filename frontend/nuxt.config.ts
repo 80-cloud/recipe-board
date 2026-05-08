@@ -1,7 +1,10 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
+  // ブラウザでカード遷移時の `instance.__vrv_devtools = info` 起因の
+  // 500 (hydration エラー) を回避するため無効化。詳細は
+  // _templates/incident-library/ で追跡予定。
+  devtools: { enabled: false },
 
   // Tailwind CSS 統合
   modules: ['@nuxtjs/tailwindcss'],

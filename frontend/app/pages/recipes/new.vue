@@ -69,6 +69,9 @@ async function onSubmit() {
 
   try {
     const created = await createRecipe(payload)
+    // useFetch のクライアントキャッシュを破棄（一覧）
+    // 一覧に新規レシピが反映されない罠（光学迷彩）への対処
+    clearNuxtData('recipe-list')
     await navigateTo(`/recipes/${created.id}`)
   } catch (e: unknown) {
     const err = e as { data?: { errors?: ValidationErrors }; statusCode?: number }

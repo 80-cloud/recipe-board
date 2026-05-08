@@ -125,6 +125,10 @@ async function onSubmit() {
 
   try {
     const updated = await updateRecipe(recipe.value.id, payload)
+    // useFetch のクライアントキャッシュを破棄（詳細 + 一覧）
+    // ブラウザ実機で詳細画面に古い値が残る罠（光学迷彩）への対処
+    clearNuxtData(`recipe-${updated.id}`)
+    clearNuxtData('recipe-list')
     await navigateTo(`/recipes/${updated.id}`)
   } catch (e: unknown) {
     const err = e as { data?: { errors?: ValidationErrors }; statusCode?: number }

@@ -30,6 +30,10 @@ async function onConfirmDelete() {
   deleteError.value = null
   try {
     await deleteRecipe(recipe.value.id)
+    // useFetch のクライアントキャッシュを破棄（一覧 + 自身）
+    // 削除後の一覧に消えたレシピが残る罠（光学迷彩）への対処
+    clearNuxtData(`recipe-${recipe.value.id}`)
+    clearNuxtData('recipe-list')
     await navigateTo('/')
   } catch (e) {
     deleteError.value = '削除に失敗しました。時間を置いて再度お試しください。'
