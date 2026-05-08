@@ -1,0 +1,56 @@
+# ============================================
+# Terraform .gitignore — 機密情報を絶対にコミットしないため
+# ============================================
+# 重要: このファイルは infra/ 内の他のすべてのファイルより先にコミットすること。
+# terraform.tfvars（DB password / SECRET_KEY_BASE 等）や terraform.tfstate
+# （全リソース ID + 一部 secret）が誤って git に入る事故を防ぐ。
+#
+# 関連:
+#   - task-board 2026-05-07 hardcoded-password 事故（同型予防）
+#   - CLAUDE.md セクション 12（AI 誤操作防止の多層防御）
+#   - CLAUDE.md セクション 6（禁止事項）
+#   - .gitleaks.toml（コミット時の機密情報検知）
+# ============================================
+
+# ----- ローカル状態 -----
+.terraform/
+
+# ----- state ファイル（機密情報を含む）-----
+*.tfstate
+*.tfstate.*
+
+# ----- 変数ファイル（機密情報を含む）-----
+*.tfvars
+*.tfvars.json
+
+# 例外: テンプレート（構造のみ・値は CHANGE_ME）はコミット可
+!*.tfvars.example
+
+# ----- 上書きファイル -----
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# ----- crash ログ -----
+crash.log
+crash.*.log
+
+# ----- plan の出力（手動で .tfplan を保存することがある）-----
+*.tfplan
+*.tfplan.*
+
+# ----- terraform plan / show のテキスト出力（手動 redirect 用）-----
+plan.out
+apply.out
+
+# ----- バックアップ -----
+*.bak
+*.backup
+
+# ============================================
+# 含めるべきもの（gitignore しない・確認用コメント）:
+#   - main.tf / variables.tf / outputs.tf / user_data.sh（ソース）
+#   - terraform.tfvars.example（テンプレ）
+#   - .terraform.lock.hcl（provider バージョン固定）
+# ============================================
