@@ -10,6 +10,6 @@ class CreateSteps < ActiveRecord::Migration[8.1]
     end
 
     # 複合インデックス: 手順の番号順取得を高速化（DB設計書 4）
-    add_index :steps, [:recipe_id, :position], name: "idx_steps_recipe_position"
+    add_index :steps, [ :recipe_id, :position ], name: "idx_steps_recipe_position"
   end
 end

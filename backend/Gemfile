@@ -37,7 +37,7 @@ gem "rack-cors"
 
 # Load environment variables from .env file (development/test only)
 # task-board の hardcoded password 事故継承：機密情報は .env で管理
-gem "dotenv-rails", groups: [:development, :test]
+gem "dotenv-rails", groups: [ :development, :test ]
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
