@@ -75,3 +75,22 @@ export async function createRecipe(input: RecipeInput): Promise<RecipeDetail> {
     body: { recipe: input },
   })
 }
+
+/**
+ * レシピ更新（S-04 用）
+ *
+ * ドローン D-1 で確認した教訓:
+ *   - nested attrs に id 付きで送ると更新
+ *   - id 無しで送ると新規追加
+ *   - _destroy: true で送ると削除
+ *   - 全 3 状態が混在送信で同時に処理される
+ */
+export async function updateRecipe(id: number, input: RecipeInput): Promise<RecipeDetail> {
+  const config = useRuntimeConfig()
+  const apiBase = config.public.apiBase
+
+  return await $fetch<RecipeDetail>(`${apiBase}/recipes/${id}`, {
+    method: 'PATCH',
+    body: { recipe: input },
+  })
+}

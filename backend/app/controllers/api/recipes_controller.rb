@@ -27,6 +27,19 @@ module Api
       end
     end
 
+    # PATCH /api/recipes/:id
+    # 画面設計書 4-4 S-04: レシピ編集
+    # ドローン D-1 で確認: nested attrs の既存更新 / 新規追加 / _destroy 削除の
+    # 3 状態がすべて期待どおり機能する（accepts_nested_attributes_for + Strong Params）
+    def update
+      recipe = Recipe.find(params[:id])
+      if recipe.update(recipe_params)
+        render json: serialize_detail(recipe.reload)
+      else
+        render json: { errors: recipe.errors.as_json }, status: :unprocessable_entity
+      end
+    end
+
     # DELETE /api/recipes/:id
     # 画面設計書 4-2 S-02: 削除モーダル経由で削除
     # dependent: :destroy で ingredients/steps も連動削除（ドローンで動作確認済）
