@@ -199,7 +199,8 @@ NUXT_PUBLIC_API_BASE=http://localhost:3000/api NITRO_PORT=3002 \
 - [x] B-5-β: `infra/main.tf` 骨格・VPC / SG（PR #64）
 - [x] B-5-γ: `infra/main.tf` に EC2 / RDS / EIP 追記（PR #67）
 - [x] B-5-δ: `variables.tf` / `outputs.tf` / `terraform.tfvars.example` 分離（PR #69）
-- [ ] **B-5-ε: `infra/user_data.sh` 作成（次に着手）**
+- [x] B-5-ε: `infra/user_data.sh` 作成（PR #80 + F1 fix #82）
+- [ ] **B-5-ζ: `main.tf` に user_data 配線（次に着手）**
 - [ ] B-6: `terraform init` + `plan`（read-only）
 - [ ] B-7: plan レビュー（人間 + AI 二重チェック）
 
@@ -207,7 +208,7 @@ NUXT_PUBLIC_API_BASE=http://localhost:3000/api NITRO_PORT=3002 \
 - [x] scout-drone-protocol v3.3（過去事故から学ぶ訓練フェーズ運用）
 - [x] CLAUDE.md セクション 18（提出時運用モード）
 - [x] incident-library 連携（過去事故の永続化）
-- [x] Claude Code Hooks（D-GIT-01 / D-EC2-COUNT / port-conflict）
+- [x] Claude Code Hooks（D-GIT-01 / D-EC2-COUNT / port-conflict / D-DESTRUCT-REGEX）
 - [x] GitHub Actions 自動化（incident-watchdog / RDS auto-stop）
 
 ---
