@@ -1,15 +1,18 @@
 # ============================================
-# recipe-board / infra / main.tf — 骨格（Phase 4 B-5-β）
+# recipe-board / infra / main.tf — Phase 4 B-5-β / γ / δ
 # ============================================
-# このファイルは VPC（参照のみ） / SG の宣言までを含む骨格。
-# EC2 / RDS / EIP は B-5-γ で追記する。
-# variables.tf / outputs.tf / terraform.tfvars.example は B-5-δ で分離する。
+# resource / data / provider 宣言。
+# - 変数定義: variables.tf
+# - 出力定義: outputs.tf
+# - 値の雛形: terraform.tfvars.example（実値は terraform.tfvars に書き .gitignore で除外）
 #
 # 安全方針（CLAUDE.md セクション 12 準拠）:
 #   - 新規 VPC を作らず default VPC を流用（NAT Gateway 課金回避）
 #   - SSH は自宅 IPv4 / IPv6 限定（0.0.0.0/0 禁止）
 #   - RDS SG は EC2 SG からのみ許可（Public アクセス禁止）
-#   - terraform.tfvars と tfstate は infra/.gitignore（PR #62）で除外済み
+#   - RDS は deletion_protection + lifecycle.prevent_destroy の二重ロック
+#   - EC2 は IMDSv2 強制 / EBS 暗号化
+#   - EIP は EC2 にアタッチ（未アタッチ EIP は課金されるため）
 # ============================================
 
 terraform {
@@ -23,65 +26,9 @@ terraform {
   }
 }
 
-# ----- 変数（B-5-δ で variables.tf に分離予定）-----
-variable "aws_region" {
-  description = "AWS リージョン"
-  type        = string
-  default     = "ap-northeast-1"
-}
-
-variable "project_name" {
-  description = "リソース名 prefix / タグ用"
-  type        = string
-  default     = "recipe-board"
-}
-
-variable "home_ipv4_cidr" {
-  description = "自宅 IPv4 CIDR（SSH 許可元、例: 203.0.113.10/32）"
-  type        = string
-  sensitive   = true
-}
-
-variable "home_ipv6_cidr" {
-  description = "自宅 IPv6 CIDR（SSH 許可元、例: 2001:db8::/64）"
-  type        = string
-  sensitive   = true
-}
-
-variable "ec2_instance_type" {
-  description = "EC2 インスタンスタイプ（東京リージョン無料枠は t3.micro 限定・F1 反映）"
-  type        = string
-  default     = "t3.micro"
-
-  validation {
-    condition     = var.ec2_instance_type == "t3.micro"
-    error_message = "ap-northeast-1 では t3.micro のみ無料枠対象（incident-library: 2026-05-09-tokyo-region-t2micro-not-free）。"
-  }
-}
-
-variable "ec2_key_name" {
-  description = "EC2 SSH 用 EC2 Key Pair 名（事前に AWS で作成しておく）"
-  type        = string
-}
-
-variable "db_username" {
-  description = "RDS マスターユーザー名"
-  type        = string
-  sensitive   = true
-}
-
-variable "db_password" {
-  description = "RDS マスターパスワード（最低 8 文字）"
-  type        = string
-  sensitive   = true
-
-  validation {
-    condition     = length(var.db_password) >= 8
-    error_message = "RDS パスワードは 8 文字以上必須。"
-  }
-}
-
 # ----- Provider -----
+# 変数定義は variables.tf に分離（B-5-δ）。
+# 出力は outputs.tf に分離（B-5-δ）。
 provider "aws" {
   region = var.aws_region
 
