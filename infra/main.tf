@@ -48,6 +48,39 @@ variable "home_ipv6_cidr" {
   sensitive   = true
 }
 
+variable "ec2_instance_type" {
+  description = "EC2 インスタンスタイプ（東京リージョン無料枠は t3.micro 限定・F1 反映）"
+  type        = string
+  default     = "t3.micro"
+
+  validation {
+    condition     = var.ec2_instance_type == "t3.micro"
+    error_message = "ap-northeast-1 では t3.micro のみ無料枠対象（incident-library: 2026-05-09-tokyo-region-t2micro-not-free）。"
+  }
+}
+
+variable "ec2_key_name" {
+  description = "EC2 SSH 用 EC2 Key Pair 名（事前に AWS で作成しておく）"
+  type        = string
+}
+
+variable "db_username" {
+  description = "RDS マスターユーザー名"
+  type        = string
+  sensitive   = true
+}
+
+variable "db_password" {
+  description = "RDS マスターパスワード（最低 8 文字）"
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = length(var.db_password) >= 8
+    error_message = "RDS パスワードは 8 文字以上必須。"
+  }
+}
+
 # ----- Provider -----
 provider "aws" {
   region = var.aws_region
@@ -147,4 +180,128 @@ resource "aws_security_group" "rds" {
   tags = {
     Name = "${var.project_name}-rds-sg"
   }
+}
+
+# ============================================
+# B-5-γ: EC2 / RDS / EIP 本体
+# ============================================
+
+# ----- AMI: Amazon Linux 2023 最新 -----
+data "aws_ami" "al2023" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-x86_64"]
+  }
+
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
+# ----- EC2 インスタンス -----
+# 無料枠: t3.micro × 750h/月（account 単位 / F4）
+# IMDSv2 強制 / EBS gp3 8GB / user_data は B-5-ε で追加予定
+resource "aws_instance" "app" {
+  ami                         = data.aws_ami.al2023.id
+  instance_type               = var.ec2_instance_type
+  subnet_id                   = data.aws_subnets.default.ids[0]
+  vpc_security_group_ids      = [aws_security_group.ec2.id]
+  associate_public_ip_address = true
+  key_name                    = var.ec2_key_name
+
+  metadata_options {
+    http_tokens                 = "required" # IMDSv2 強制
+    http_endpoint               = "enabled"
+    http_put_response_hop_limit = 1
+    instance_metadata_tags      = "enabled"
+  }
+
+  root_block_device {
+    volume_type           = "gp3"
+    volume_size           = 8 # GB（無料枠 30GB 以下）
+    encrypted             = true
+    delete_on_termination = true
+  }
+
+  tags = {
+    Name = "${var.project_name}-app"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      ami, # AMI 更新で意図せず置換されるのを防ぐ
+    ]
+  }
+}
+
+# ----- RDS サブネットグループ -----
+# RDS は最低 2 つの AZ にまたがるサブネットグループが必須
+resource "aws_db_subnet_group" "main" {
+  name       = "${var.project_name}-db-subnet-group"
+  subnet_ids = data.aws_subnets.default.ids
+
+  tags = {
+    Name = "${var.project_name}-db-subnet-group"
+  }
+}
+
+# ----- RDS インスタンス -----
+# 無料枠: db.t3.micro × 750h/月 / 20GB gp3 / Single-AZ
+# 削除困難設定（多層防御）:
+#   - deletion_protection = true（AWS 側）
+#   - lifecycle.prevent_destroy = true（Terraform 側）
+#   → 削除には main.tf の編集 + apply が 2 段階必要
+resource "aws_db_instance" "main" {
+  identifier     = "${var.project_name}-db"
+  engine         = "mysql"
+  engine_version = "8.4"
+  instance_class = "db.t3.micro"
+
+  allocated_storage     = 20 # GB（無料枠上限）
+  max_allocated_storage = 20 # autoscaling で 20GB を超えないようにする
+  storage_type          = "gp3"
+  storage_encrypted     = true
+
+  db_name  = "recipe_board"
+  username = var.db_username
+  password = var.db_password
+  port     = 3306
+
+  vpc_security_group_ids = [aws_security_group.rds.id]
+  db_subnet_group_name   = aws_db_subnet_group.main.name
+  publicly_accessible    = false # F5: 公開禁止
+  multi_az               = false # 無料枠維持（倍額回避）
+
+  backup_retention_period = 0    # 学習用（無料枠 storage を消費しない）
+  skip_final_snapshot     = true # 学習用（snapshot 課金回避）
+  deletion_protection     = true # AWS 側削除保護
+  apply_immediately       = true # 学習用（メンテ window を待たない）
+
+  tags = {
+    Name = "${var.project_name}-db"
+  }
+
+  lifecycle {
+    prevent_destroy = true # Terraform 側削除保護（CLAUDE.md 12-3）
+  }
+}
+
+# ----- Elastic IP -----
+# F2 反映: instance 属性で必ず EC2 にアタッチ。
+# AWS 課金ルール: running EC2 にアタッチされている EIP のみ無料。
+# 停止中 EC2 や未関連付けの EIP は $0.005/時間で課金されるため、
+# このリソースは aws_instance.app と一蓮托生で運用する。
+resource "aws_eip" "app" {
+  instance = aws_instance.app.id
+  domain   = "vpc"
+
+  tags = {
+    Name = "${var.project_name}-app-eip"
+  }
+
+  depends_on = [aws_instance.app]
 }
