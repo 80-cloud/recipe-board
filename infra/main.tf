@@ -151,7 +151,7 @@ data "aws_ami" "al2023" {
 
 # ----- EC2 インスタンス -----
 # 無料枠: t3.micro × 750h/月（account 単位 / F4）
-# IMDSv2 強制 / EBS gp3 8GB / user_data は B-5-ε で追加予定
+# IMDSv2 強制 / EBS gp3 8GB / user_data: infra/user_data.sh（PR #80 + #82）
 resource "aws_instance" "app" {
   ami                         = data.aws_ami.al2023.id
   instance_type               = var.ec2_instance_type
@@ -159,6 +159,12 @@ resource "aws_instance" "app" {
   vpc_security_group_ids      = [aws_security_group.ec2.id]
   associate_public_ip_address = true
   key_name                    = var.ec2_key_name
+
+  # cloud-init で第一起動時に実行される bootstrap スクリプト。
+  # user_data は EC2 メタデータから誰でも読めるため、機密リテラルを含めない（incident 2026-05-07-hardcoded-password）。
+  user_data = file("${path.module}/user_data.sh")
+  # user_data 変更時は EC2 を再作成する。default の false だと cloud-init が再実行されず、変更が silently 無効化される。
+  user_data_replace_on_change = true
 
   metadata_options {
     http_tokens                 = "required" # IMDSv2 強制
