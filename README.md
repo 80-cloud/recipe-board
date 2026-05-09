@@ -182,15 +182,33 @@ NUXT_PUBLIC_API_BASE=http://localhost:3000/api NITRO_PORT=3002 \
 
 ## 開発状況
 
+### 設計・実装フェーズ
 - [x] リポジトリ初期化
-- [ ] 要件定義書の作成
-- [ ] 画面設計書の作成
-- [ ] DB 設計書の作成
-- [ ] 技術スタック確定
-- [ ] バックエンド初期セットアップ
-- [ ] フロントエンド初期セットアップ
-- [ ] CRUD 機能の実装
-- [ ] AWS デプロイ
+- [x] 要件定義書の作成（[`docs/要件定義書.md`](docs/要件定義書.md)）
+- [x] 画面設計書の作成（[`docs/画面設計書.md`](docs/画面設計書.md)）
+- [x] DB 設計書の作成（[`docs/DB設計書.md`](docs/DB設計書.md)）
+- [x] 技術スタック確定（Rails 8.1.3 + Nuxt 3 + MySQL 8.4）
+- [x] バックエンド初期セットアップ（Rails API モード）
+- [x] フロントエンド初期セットアップ（Nuxt 3 + TypeScript）
+- [x] CRUD 機能の実装（S-01 一覧 / S-02 詳細 / S-03 新規 / S-04 編集）
+
+### AWS デプロイフェーズ（Phase 4・進行中）
+- [x] B-1〜B-3: AWS 現状確認 / task-board 停止 / Ruby version 強制
+- [x] B-4-A: production 1-DB 化（PR #58）
+- [x] B-5-α: `infra/.gitignore` 作成（PR #62）
+- [x] B-5-β: `infra/main.tf` 骨格・VPC / SG（PR #64）
+- [x] B-5-γ: `infra/main.tf` に EC2 / RDS / EIP 追記（PR #67）
+- [x] B-5-δ: `variables.tf` / `outputs.tf` / `terraform.tfvars.example` 分離（PR #69）
+- [ ] **B-5-ε: `infra/user_data.sh` 作成（次に着手）**
+- [ ] B-6: `terraform init` + `plan`（read-only）
+- [ ] B-7: plan レビュー（人間 + AI 二重チェック）
+
+### 開発プロトコル / 運用基盤（修練城）
+- [x] scout-drone-protocol v3.3（過去事故から学ぶ訓練フェーズ運用）
+- [x] CLAUDE.md セクション 18（提出時運用モード）
+- [x] incident-library 連携（過去事故の永続化）
+- [x] Claude Code Hooks（D-GIT-01 / D-EC2-COUNT / port-conflict）
+- [x] GitHub Actions 自動化（incident-watchdog / RDS auto-stop）
 
 ---
 
