@@ -51,19 +51,39 @@ else
   echo "[OK] swap=2GB created and persisted in /etc/fstab"
 fi
 
+# --- dnf retry helper (issue #81) ---
+# cloud-init は同一 instance-id では user_data を再実行しない仕様。
+# dnf が一時的ネットワーク障害で fail すると bootstrap が永久失敗するため、
+# 3 回 retry + 指数的ウェイト（10s/20s）で耐性を持たせる。
+dnf_with_retry() {
+  local label="$1"; shift
+  local i wait
+  for i in 1 2 3; do
+    if dnf "$@"; then
+      echo "[OK] $label (attempt $i)"
+      return 0
+    fi
+    if [ "$i" -eq 3 ]; then
+      echo "[ERROR] $label failed after 3 attempts"
+      return 1
+    fi
+    wait=$((i * 10))
+    echo "[..] $label attempt $i failed, retrying in ${wait}s"
+    sleep "$wait"
+  done
+}
+
 # --- パッケージ更新 ---
 # 注意: AL2023 は curl-minimal がプリインストール済（incident 2026-05-07-curl-minimal-conflict）。
 # 本フェーズでは curl の install を行わないため update のみで衝突は起きない。
-echo "[..] dnf update"
-dnf update -y --quiet
-echo "[OK] dnf update"
+echo "[..] dnf update (with retry)"
+dnf_with_retry "dnf update" update -y --quiet
 
 # --- 必要パッケージ install ---
 # nginx: 起動完了を HTTP で確認するためのプレースホルダ
 # git:   後続フェーズでアプリを clone する基礎
-echo "[..] dnf install: nginx, git"
-dnf install -y nginx git
-echo "[OK] dnf install"
+echo "[..] dnf install: nginx, git (with retry)"
+dnf_with_retry "dnf install nginx git" install -y nginx git
 
 # --- nginx 用 起動マーカー HTML を配置 ---
 mkdir -p /usr/share/nginx/html
