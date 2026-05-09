@@ -48,6 +48,20 @@ v1（PR #44）はこの問題に応えようとしたが、**ドローンを "�
 
 → PR 本文に **「適用 / 省略 + 理由」を 1 行で記載**。「忘れ」「面倒」は形骸化警報。
 
+### v3.2 強化ルール: 🟡 でも Phase 1-D（過去事故突合）だけは必須
+
+🟡（省略可）と判断した場合でも、**Phase 1-D の過去事故ライブラリ突合だけは必ず実施**する。理由：
+
+- 当初 🟡 と判断した B-5-δ で、過去事故突合により 3 件の関連事故を発見し 🟢 に格上げした実例
+- 過去事故突合は時間コストが小さい（5〜10 分）一方、見逃した場合の損失は大きい（同型事故の再発）
+- 「🟡 から 🟢 への格上げ」を **構造的に許容**する仕組み
+
+→ 🟡 で省略を決断する場合も「過去事故突合の結果、同型リスクなしと確認した」を PR 本文に記載する。
+
+### v3.2 強化ルール: git mechanics 層は階層に関わらず適用必須
+
+「Git mechanics 層ペイロード」（D-GIT-01〜04）は、**🟢🟡🔴 の判定に関わらず**、すべての PR で適用される。これは過去 3 回の再発を踏まえた強制ルールである。
+
 ---
 
 ## 運用フロー（時系列）
@@ -137,6 +151,51 @@ v1（PR #44）はこの問題に応えようとしたが、**ドローンを "�
 | D-08 | CORS 偽装（許可外 Origin）| 既存 CORS 設定 | 防御の実機検証 |
 | D-09 | 同時アクセス（並列 fetch）| 既存キャッシュ | race condition |
 | D-10 | Mass Assignment payload | 既存 Strong Params | 漏れ検出 |
+
+### Infra 層ペイロード（🟢🟡 v3.2 で正式追加）
+
+infra（Terraform / AWS / IaC）系の縦貫通では、上記の app 層ペイロードがほぼ適用外になる。代わりに以下を投下する。すべて **read-only な AWS API** であり、課金・本体起動・新規リソース作成を伴わない。
+
+#### 必須ペイロード（🔴・infra 系縦貫通で適用必須）
+
+| # | ペイロード | 投下対象（既存環境）| 観察ポイント |
+|---|---|---|---|
+| **D-INFRA-01** | 認証アイデンティティ確認 | `aws sts get-caller-identity` | 想定 IAM user / account ID と一致 |
+| **D-INFRA-02** | デフォルト VPC 確認 | `aws ec2 describe-vpcs --filters "Name=is-default,Values=true"` | data source が解決可能 |
+| **D-INFRA-03** | free-tier EC2 タイプ確認 | `aws ec2 describe-instance-types --instance-types <type>` | **リージョン依存性チェック**（ap-northeast-1 で t2.micro は対象外）|
+| **D-INFRA-04** | free-tier RDS engine version 確認 | `aws rds describe-orderable-db-instance-options` | 利用可能 engine_version の検証 |
+| **D-INFRA-05** | 既存 EIP 監査 | `aws ec2 describe-addresses` | 孤立 EIP / stopped EC2 アタッチによる課金リスク（[2026-05-09-eip-stopped-ec2-charge](../../../_templates/incident-library/2026-05-09-eip-stopped-ec2-charge.md)） |
+
+#### 推奨ペイロード（🟡）
+
+| # | ペイロード | 投下対象 | 観察ポイント |
+|---|---|---|---|
+| D-INFRA-06 | 既存稼働 EC2 監査 | `aws ec2 describe-instances` | 想定外稼働の検出 |
+| D-INFRA-07 | 既存 RDS 監査 | `aws rds describe-db-instances` | ストレージ無料枠の合算 |
+| D-INFRA-08 | RDS ストレージ詳細 | `aws rds describe-db-instances --query '[].AllocatedStorage'` | 無料枠 20GB 上限の合算チェック |
+| D-INFRA-09 | AWS Budgets 設定 | `aws budgets describe-budgets` | 検知レイヤーの有無確認 |
+
+→ infra 系縦貫通では D-INFRA-01〜05（必須 5 件）を最低投下し、🟡 は文脈で判断する。
+
+### Git mechanics 層ペイロード（v3.2 で新設）
+
+cwd / branch state の管理ミスは本プロトコル運用中に **3 回再発**した（[2026-05-09-cwd-branch-state-3rd-recurrence](../../../_templates/incident-library/2026-05-09-cwd-branch-state-3rd-recurrence.md)）。app 層・infra 層に並ぶ第 3 のドローンカテゴリとして正式追加する。
+
+#### 必須ペイロード（🔴・全 git / gh / aws コマンドで適用必須）
+
+| # | ペイロード | 投下対象 | 観察ポイント |
+|---|---|---|---|
+| **D-GIT-01** | cwd / branch 直前確認 | `pwd && git branch --show-current` の手動出力 | **全 git / gh コマンドの直前に必ず実行**。期待 cwd / branch と不一致なら明示 cd で修正 |
+| **D-GIT-02** | stacked PR 警告 | `gh pr view --json baseRefName` | base ブランチが merge `--delete-branch` で削除されないか事前確認。stacked の場合は base を main に切替えてからマージ |
+
+#### 推奨ペイロード（🟡）
+
+| # | ペイロード | 投下対象 | 観察ポイント |
+|---|---|---|---|
+| D-GIT-03 | 絶対パス git の活用 | `git -C <full-path> <command>` | cwd 非依存化。複数リポジトリ横断作業で特に有効 |
+| D-GIT-04 | gh `--repo` 明示 | 全 `gh` コマンド | cwd 起点の repo 解決を回避。2 回目再発（2026-05-09-cross-repo-cwd-mistake-recurrence）の対策 |
+
+→ git mechanics は **すべての階層**（app / infra / docs）で適用必須。本ドローンは省略不可。
 
 ### 投下フロー（厳格化）
 
@@ -276,6 +335,7 @@ Phase 4 Pre Phase で R-D-XX 投下時に「**retrospective drone**」という�
 | v2 | 2026-05-08 | 概念モデルを盾 vs 矛で再定義 / ドローン = 使い捨ての囮 / 時系列を着手前に修正 / スコープ判定マトリクス追加 / デメリット明示 / regression chaos test を別カテゴリに分離 |
 | v2.1 | 2026-05-09 | **必須ドローンに D-LZ（実ブラウザ CSR 遷移）と D-CACHE（mutation → 別画面遷移）を追加**。光学迷彩 X-01 / X-02 でブラウザレイヤーの罠が顕在化したため。「SSR curl 通過 ≠ ブラウザ hydration 通過」を仕組みに刻み込む |
 | v3.1 | 2026-05-09 | **禁止用語明文化**（"retrospective drone" 等）+ **本体起動を伴う検証の事前申告ルール**追加。Phase 4 Pre Phase での自己違反を踏まえ scout-drone と regression chaos test の境界を厳格化。dev-templates#5 で B 振り返り監査と連動 |
+| v3.2 | 2026-05-09 | **infra ドローンカタログ**（D-INFRA-01〜09）と **git mechanics ドローン**（D-GIT-01〜04）を正式追加。app 層偏向と git mechanics 層未カバーの 2 つのギャップを構造的に塞ぐ。Phase 4 B-5-γ で発見した 5 件の Finding（F1〜F5・推定 $3.60/月の課金停止含む）と、cwd / branch state 混乱 3 回再発（incident-library 永続化済）を踏まえた仕組み化。**🟡 でも Phase 1-D は必須**および**git mechanics は階層問わず必須**の強化ルールを追加。recipe-board#72 で対応 |
 
 ---
 
