@@ -1,10 +1,20 @@
 module Api
   class RecipesController < BaseController
+    # ソート whitelist（要件定義書 3-2 Phase 2 / 無効値は SQL injection 対策で無視）
+    SORT_OPTIONS = {
+      "created_desc" => { created_at: :desc },
+      "updated_desc" => { updated_at: :desc },
+      "title_asc"    => { title: :asc }
+    }.freeze
+    DEFAULT_SORT = "created_desc"
+
     # GET /api/recipes
-    # 画面設計書 4-1 S-01: レシピ一覧（作成日降順）
+    # 画面設計書 4-1 S-01: レシピ一覧
     # S-05 (Phase 2): ?q= でタイトル部分一致検索（未指定時は全件）
+    # #108  (Phase 2): ?sort= で並び順切替（whitelist 外は default に fallback）
     def index
-      scope = Recipe.order(created_at: :desc)
+      sort_key = SORT_OPTIONS.key?(params[:sort]) ? params[:sort] : DEFAULT_SORT
+      scope = Recipe.order(SORT_OPTIONS[sort_key])
       if params[:q].present?
         sanitized = ActiveRecord::Base.sanitize_sql_like(params[:q].to_s)
         scope = scope.where("title LIKE ?", "%#{sanitized}%")
