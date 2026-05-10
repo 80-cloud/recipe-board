@@ -257,4 +257,9 @@ resource "aws_eip" "app" {
   }
 
   depends_on = [aws_instance.app]
+
+  lifecycle {
+    # 誤って public IP を再払い出しさせない二重ロック横展開（RDS と同パターン・修練城整備）
+    prevent_destroy = true
+  }
 }
