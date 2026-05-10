@@ -56,7 +56,7 @@ function syncUrl(state: { q: string; sort: string }) {
         <input
           v-model="q"
           type="search"
-          placeholder="レシピタイトルを検索..."
+          placeholder="タイトル / 材料 / タグで検索..."
           class="flex-1 rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
           aria-label="レシピ検索"
         />

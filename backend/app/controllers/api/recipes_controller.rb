@@ -13,12 +13,21 @@ module Api
     # S-05 (Phase 2): ?q= でタイトル部分一致検索（未指定時は全件）
     # #108  (Phase 2): ?sort= で並び順切替（whitelist 外は default に fallback）
     # #110  (Phase 2): tags をサマリーに含める（N+1 回避のため includes(:tags)）
+    # #114  (Phase 2): ?q= の対象を title / ingredients.name / tags.name の OR に拡張
     def index
       sort_key = SORT_OPTIONS.key?(params[:sort]) ? params[:sort] : DEFAULT_SORT
       scope = Recipe.includes(:tags).order(SORT_OPTIONS[sort_key])
       if params[:q].present?
         sanitized = ActiveRecord::Base.sanitize_sql_like(params[:q].to_s)
-        scope = scope.where("title LIKE ?", "%#{sanitized}%")
+        pattern = "%#{sanitized}%"
+        # LEFT OUTER JOIN で材料/タグが無いレシピも対象に含める
+        # distinct で結合による重複行を排除
+        scope = scope.left_outer_joins(:ingredients, :tags)
+                     .where(
+                       "recipes.title LIKE :p OR ingredients.name LIKE :p OR tags.name LIKE :p",
+                       p: pattern
+                     )
+                     .distinct
       end
       render json: scope.map { |r| serialize_summary(r) }
     end
