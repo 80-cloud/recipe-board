@@ -229,7 +229,7 @@ resource "aws_db_instance" "main" {
   publicly_accessible    = false # F5: 公開禁止
   multi_az               = false # 無料枠維持（倍額回避）
 
-  backup_retention_period = 0    # 学習用（無料枠 storage を消費しない）
+  backup_retention_period = 1    # 最低限のバックアップ保護（無料枠 7 日まで OK だが、allocated 20GB を超えない安全圏として 1 日採用・修練城整備 #11）
   skip_final_snapshot     = true # 学習用（snapshot 課金回避）
   deletion_protection     = true # AWS 側削除保護
   apply_immediately       = true # 学習用（メンテ window を待たない）
