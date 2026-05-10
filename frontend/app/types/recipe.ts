@@ -7,12 +7,14 @@
 
 /**
  * レシピ一覧の各要素（S-01 / GET /api/recipes）
+ * #110 タグ機能: tags を追加（string array、未付与は []）
  */
 export interface RecipeSummary {
   id: number
   title: string
   created_at: string
   updated_at: string
+  tags: string[]
 }
 
 /**
@@ -60,6 +62,9 @@ export interface RecipeInput {
   title: string
   ingredients_attributes: IngredientInput[]
   steps_attributes: StepInput[]
+  // #110 タグ機能: 省略可（PATCH で省略すると既存タグ維持）。
+  // string array を送ると backend で重複排除・空文字 reject される
+  tags_input?: string[]
 }
 
 /**
