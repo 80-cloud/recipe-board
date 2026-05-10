@@ -1,15 +1,18 @@
 import type { RecipeSummary, RecipeDetail, RecipeInput } from '~/types/recipe'
 
 /**
- * レシピ一覧を取得する composable（S-01 用）
+ * レシピ一覧を取得する composable（S-01 用 / S-05 検索対応）
  *
  * 設計判断:
  *   - SSR でも fetch することで初回アクセスから Cards を描画（EmptyState フラッシュ回避）
  *   - useFetch の key で SSR/CSR の重複 fetch を抑止
  *   - エラーは ref で公開し、コンポーネント側でリトライ可能にする
  *   - default を [] にして data が null の状態を防ぐ（テンプレ側の v-if 簡素化）
+ *   - q 引数: タイトル部分一致検索（S-05）。Ref で渡すと reactive に再 fetch
+ *     ※ X-02 useFetch キャッシュ罠（2026-05-09）対策: query を computed で渡すことで
+ *       q 変更時に Nuxt が自動的に refetch を行う（手動 refresh 不要）
  */
-export function useRecipeList() {
+export function useRecipeList(q?: Ref<string>) {
   const config = useRuntimeConfig()
   const apiBase = config.public.apiBase
 
@@ -18,6 +21,10 @@ export function useRecipeList() {
     {
       key: 'recipe-list',
       default: () => [],
+      query: computed(() => {
+        const v = q?.value
+        return v ? { q: v } : {}
+      }),
     },
   )
 
