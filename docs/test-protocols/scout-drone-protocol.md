@@ -364,6 +364,105 @@ L4 達成率 = L4 / 全 Finding 数
 
 ---
 
+## Phase 6: 自己監視（Quis custodiet）— 衛兵八重原則（v3.4 で導入）
+
+### 動機
+
+Phase 1-5 は外敵（罠 / 過去事故）に対しては機能するが、**防御層自体の改ざん・形骸化・自爆**には穴があった。`2026-05-09-insider-threat-meta-finding` で識別した 6 シナリオ（A-F）のうち B のみ対処済で、A/C/D/E/F が未対処だった。
+
+2026-05-10 セッションで以下が **実証された予兆** として観測された：
+- `D-EC2-COUNT` の `terraform -chdir=...` bypass（hook が想定通り動かない・シナリオ A 前兆）
+- `D-DESTRUCT-REGEX` 同類 bug（修練城最重要層の同じ穴・「衛兵を見張る衛兵」必要性の決定的証拠）
+- Hook self-bite の false positive 再発（reflexive approve への助走・シナリオ F 前兆）
+
+→ Phase 6 で **「衛兵を見張る衛兵」** を protocol に正式組み込み。
+
+### 衛兵八重とは
+
+防御層自体を別の層が監視する **多重自己監視構造**。8 という数字は象徴的（実装は階層化されたチェック群）。
+
+| 階層 | 役割 | 既存実装 |
+|---|---|---|
+| 1: **本防御** | 既存修練城（hook / deny / branch protection / pre-commit / gitleaks / etc.）| 多数 |
+| 2: **編集ガード** | critical file の編集に ask permission（`Edit(/Users/macmini/.claude/settings.json)` 等 16 ルール）| `permissions.ask` |
+| 3: **改訂強制** | 改訂時は必ず Issue → PR → review。直接編集禁止 | CLAUDE.md セクション 11 |
+| 4: **自己テスト** | hook 追加・改訂時に **16+ ケースのユニットテスト必須** | `/tmp/test-d-*-regex.py` テンプレ |
+| 5: **発火ログ** | 各 hook が `/tmp/d-*-fired.log` に記録 | 既存 hook で実装済 |
+| 6: **形骸化検知** | watchdog で「使われてない防御」「古い incident」を月次検出 | `incident-watchdog.yml` 拡張対象 |
+| 7: **メモリ監査** | feedback memory の週次レビュー（汚染・古さ・矛盾） | v3.4 新設手順 |
+| 8: **人間 audit** | B 振り返り（5 アプリ毎）で全層の状態を人手確認 | `_templates/review-schedule.md` 拡張対象 |
+
+### 6 insider シナリオへの v3.4 対処マトリクス
+
+| シナリオ | v3.3 までの状態 | v3.4 対処 | 対応する衛兵階層 |
+|---|---|---|---|
+| **A**: Hook 自体の改ざん | L1 | hook 自己テスト + ask permission + 発火ログ集計 | 階層 2 / 4 / 5 |
+| **B**: acceptEdits の盲点 | L4 ✅ | （既対処）| 階層 2 |
+| **C**: incident-library 形骸化 | L2 | watchdog 拡張 + 月次「使ってない事故」audit | 階層 6 / 8 |
+| **D**: 効率化口実の防御剥がし | L2 | feedback memory + ask + class 抽象化ルール | 階層 2 / 7 |
+| **E**: メモリ汚染 | L1 | memory 編集 ask（既存）+ 週次レビュー手順（新設）| 階層 2 / 7 |
+| **F**: reflexive approve | L1 | hook ノイズ ratio 検知 + 自己テストで false positive 削減 | 階層 4 / 5 / 6 |
+
+### Phase 6 必須サブフェーズ
+
+#### 6-A: Hook 自己テスト機構（追加・改訂時）
+
+新規 PreToolUse hook を追加するとき、または既存 hook の regex を変更するときは **必ず**：
+
+1. **16+ ケース**のユニットテスト（true positive / true negative / false positive / false negative の 4 象限すべて）
+2. テスト script は `/tmp/test-d-<hookname>-regex.py` 形式
+3. テスト pass を **PR 本文に貼る**（PR review で見える形に）
+4. **標準 regex pattern library**（v3.4 で確立）を再利用：
+   - `terraform[[:space:]]([^|;&]*[[:space:]])?<verb>([^a-zA-Z0-9_-]|$)` で `terraform [<flags>] <verb>` を網羅
+   - `[^|;&]*` で `|;&` を含まない（コマンド境界を超えない）
+   - `[^a-zA-Z0-9_-]` で word boundary 相当（`apply` と `applying` を区別）
+
+#### 6-B: 形骸化のメタ警報
+
+月次（または各 B 振り返り時）に以下を確認：
+
+| シグナル | 検出方法 | 対応 |
+|---|---|---|
+| 0 fire の hook | `/tmp/d-*-fired.log` 行数 = 0 | 「使われてない防御」候補・廃止 or 規律化検討 |
+| ノイズ ratio 閾値超過 | `(false fire 件数) / (全 fire 件数)` > 0.5 | reflexive approve リスク・regex 精度向上 |
+| 古い incident 不参照 | git log でファイルが N ヶ月触られていない | 形骸化候補・カテゴリ整理 or 削除検討 |
+| memory 矛盾検出 | 週次レビューで feedback 間の矛盾検知 | 統合 or 廃止 |
+
+#### 6-C: 改訂時の self-bite 対策（2026-05-10 実証パターン）
+
+修練城自身を強化する作業（hook 追加 / settings.json 編集 / scout-drone 改訂）では：
+
+1. **コマンド本文に禁止語リテラルが入らない設計**（`feedback_chaos_test_self_falsepositive`）
+2. Issue / PR / commit body はファイル経由で渡す（`gh ... --body-file`、`git commit -F`）
+3. 修練城自身の改訂は class 抽象化（個別 fix ではなくパターン全体への対策）
+
+#### 6-D: 「衛兵を見張る衛兵」原則の運用
+
+無限後退を避けるため、以下の現実解：
+
+- **ピラミッド構造**: 各層は下位層を監視。最上位は **人間（B 振り返り）**
+- **AI を信用しすぎない**: AI は内通者になり得る（過去事故 `2026-05-07-ai-overrode-learning-context`）。critical file は ask permission で人間判断を必ず挟む
+- **形骸化への耐性**: 形骸化検知自体が形骸化しないため、watchdog の watchdog（メタ警報）を組み込む
+
+### Phase 6 形骸化警報
+
+以下が観測されたら Phase 6 自体が機能していない：
+
+- 6 ヶ月以上 hook の自己テストが追加されていない
+- `permissions.ask` の critical file リストが直近 1 年更新されていない
+- B 振り返りで Phase 6 監査項目をスキップ
+- 「衛兵八重」の階層に空白がある（特定階層が常に空）
+
+### Phase 6 適用判定
+
+| 判定 | 適用範囲 |
+|---|---|
+| 🟢 必須 | hook 追加・改訂、settings.json 編集、scout-drone 改訂、CLAUDE.md セクション 12 改訂 |
+| 🟡 推奨 | incident-library 追加・編集、memory feedback 追加 |
+| ⚪ 不要 | アプリコード（infra 以外）の通常変更 |
+
+---
+
 ## デメリットと既知の限界
 
 このプロトコルは万能ではない。以下を認識した上で運用する：
@@ -472,6 +571,7 @@ Phase 4 Pre Phase で R-D-XX 投下時に「**retrospective drone**」という�
 | v3.1 | 2026-05-09 | **禁止用語明文化**（"retrospective drone" 等）+ **本体起動を伴う検証の事前申告ルール**追加。Phase 4 Pre Phase での自己違反を踏まえ scout-drone と regression chaos test の境界を厳格化。dev-templates#5 で B 振り返り監査と連動 |
 | v3.2 | 2026-05-09 | **infra ドローンカタログ**（D-INFRA-01〜09）と **git mechanics ドローン**（D-GIT-01〜04）を正式追加。app 層偏向と git mechanics 層未カバーの 2 つのギャップを構造的に塞ぐ。Phase 4 B-5-γ で発見した 5 件の Finding（F1〜F5・推定 $3.60/月の課金停止含む）と、cwd / branch state 混乱 3 回再発（incident-library 永続化済）を踏まえた仕組み化。**🟡 でも Phase 1-D は必須**および**git mechanics は階層問わず必須**の強化ルールを追加。recipe-board#72 で対応 |
 | v3.3 | 2026-05-09 | **L1〜L4 達成 Level ヒエラルキー導入**（認識 / 回避 / 解体 / **整備**）+ **Phase 4「整備作業」**と **Phase 5「整備完了確認」**を新設。v3.2 までの構造的弱点（罠を発見しても解体・整備されないと時限爆弾化する）を塞ぐ。各 Finding に達成 Level を必須化し、L4（道路自体の改修・構造的再発不能化）を最優先で目指すルール化。本セッションの実証データ（F1 / F4 / cwd-branch で L4 達成 → 再発ゼロ）を踏まえた仕組み化。形骸化警報（L1 / L2 留まり N 件以上 等）を Phase 5 に組み込み、Phase D watchdog と連動。recipe-board#74 で対応 |
+| **v3.4** | **2026-05-10** | **Phase 6「自己監視（Quis custodiet）」**を新設し**衛兵八重原則**を正式組み込み。`2026-05-09-insider-threat-meta-finding` の 6 シナリオ（A-F）への構造的対処マトリクスを v3.4 で完成。2026-05-10 セッションで実証された予兆（`D-EC2-COUNT` の `-chdir=` bypass、`D-DESTRUCT-REGEX` 同類 bug、hook self-bite false positive）を踏まえ、**hook 自己テスト機構**（16+ ケース ユニットテスト必須化・標準 regex pattern library）と **形骸化のメタ警報**（0 fire hook / ノイズ ratio / 古い incident 不参照 / memory 矛盾）を導入。Phase 6 自体の形骸化警報も組み込み（watchdog の watchdog）。recipe-board#93 で対応 |
 
 ---
 
