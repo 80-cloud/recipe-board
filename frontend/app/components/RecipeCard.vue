@@ -21,5 +21,19 @@ function formatDate(iso: string): string {
   >
     <h2 class="text-lg font-bold text-gray-900">{{ recipe.title }}</h2>
     <p class="mt-2 text-sm text-gray-500">{{ formatDate(recipe.created_at) }}</p>
+
+    <!-- タグ chip 列（#112） -->
+    <div
+      v-if="recipe.tags && recipe.tags.length > 0"
+      class="mt-3 flex flex-wrap gap-1"
+    >
+      <span
+        v-for="t in recipe.tags"
+        :key="t"
+        class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
+      >
+        {{ t }}
+      </span>
+    </div>
   </NuxtLink>
 </template>

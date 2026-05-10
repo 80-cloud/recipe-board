@@ -15,6 +15,7 @@ import type {
 //   - $fetch は 4xx/5xx で throw → catch で error.data.errors を取り出す
 
 const title = ref('')
+const tagsInputRaw = ref('') // #112 タグ機能: カンマ区切り文字列で UI 入力
 const ingredients = ref<IngredientInput[]>([
   { name: '', quantity: '', position: 1 },
 ])
@@ -65,6 +66,7 @@ async function onSubmit() {
     title: title.value,
     ingredients_attributes: validIngredients,
     steps_attributes: validSteps,
+    tags_input: parseTagsInput(tagsInputRaw.value), // #112 タグ機能
   }
 
   try {
@@ -123,6 +125,21 @@ async function onSubmit() {
           >
             {{ msg }}
           </p>
+        </div>
+
+        <!-- タグ（#112: カンマ区切り） -->
+        <div class="mt-6">
+          <label for="tags" class="block text-sm font-medium text-gray-900">
+            タグ
+          </label>
+          <input
+            id="tags"
+            v-model="tagsInputRaw"
+            type="text"
+            placeholder="和食, 簡単, 夕食"
+            class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          >
+          <p class="mt-1 text-xs text-gray-500">カンマ（, または 、）で区切って入力</p>
         </div>
 
         <!-- 材料 -->
