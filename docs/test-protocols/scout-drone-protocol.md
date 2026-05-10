@@ -1,5 +1,11 @@
 # Scout + Drone Protocol v2 — 縦貫通単位の事前偵察
 
+> **横展開原本との関係（修練城整備 #8 で明示・2026-05-10）:**
+> - 横展開原本: [`_templates/test-protocols/scout-drone-protocol.md`](../../../_templates/test-protocols/scout-drone-protocol.md)
+> - 本ファイル: recipe-board の **project-specific 版**（最も活発に更新中）
+> - **同期方針**: recipe-board で改訂後、`_templates` 側へ手動反映（自動化は将来課題）
+> - **新規プロジェクトの初期化時**: `_templates` 側を base として継承
+
 > **概念モデル（5 行）**
 > - 本体 = 実装中の機能（護るべき対象）
 > - 多層防御 = **盾**（外部脅威から本体を護る・[CLAUDE.md セクション 12](../../CLAUDE.md) 参照）
