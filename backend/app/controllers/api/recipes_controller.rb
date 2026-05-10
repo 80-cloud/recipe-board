@@ -12,21 +12,22 @@ module Api
     # 画面設計書 4-1 S-01: レシピ一覧
     # S-05 (Phase 2): ?q= でタイトル部分一致検索（未指定時は全件）
     # #108  (Phase 2): ?sort= で並び順切替（whitelist 外は default に fallback）
+    # #110  (Phase 2): tags をサマリーに含める（N+1 回避のため includes(:tags)）
     def index
       sort_key = SORT_OPTIONS.key?(params[:sort]) ? params[:sort] : DEFAULT_SORT
-      scope = Recipe.order(SORT_OPTIONS[sort_key])
+      scope = Recipe.includes(:tags).order(SORT_OPTIONS[sort_key])
       if params[:q].present?
         sanitized = ActiveRecord::Base.sanitize_sql_like(params[:q].to_s)
         scope = scope.where("title LIKE ?", "%#{sanitized}%")
       end
-      render json: scope.as_json(only: [ :id, :title, :created_at, :updated_at ])
+      render json: scope.map { |r| serialize_summary(r) }
     end
 
     # GET /api/recipes/:id
-    # 画面設計書 4-2 S-02: レシピ詳細（材料・手順を含む）
+    # 画面設計書 4-2 S-02: レシピ詳細（材料・手順・タグを含む）
     # ドローン投下で確認した as_json 出力形式に合わせる
     def show
-      recipe = Recipe.includes(:ingredients, :steps).find(params[:id])
+      recipe = Recipe.includes(:ingredients, :steps, :tags).find(params[:id])
       render json: serialize_detail(recipe)
     end
 
@@ -68,12 +69,20 @@ module Api
 
     # Strong Parameters（ドローン D-4 で Mass Assignment 起動確認済）
     # id / created_at / updated_at は permit しない
+    # tags_input は string array（["和食", "簡単"]）として permit
     def recipe_params
       params.require(:recipe).permit(
         :title,
+        tags_input: [],
         ingredients_attributes: [ :id, :name, :quantity, :position, :_destroy ],
         steps_attributes:       [ :id, :description, :position, :_destroy ]
       )
+    end
+
+    # 一覧用サマリー（タグ名のみ、材料・手順は含めない）
+    def serialize_summary(recipe)
+      recipe.as_json(only: [ :id, :title, :created_at, :updated_at ])
+            .merge("tags" => recipe.tags.map(&:name))
     end
 
     # show / create で共通利用する as_json 出力
@@ -84,7 +93,7 @@ module Api
           ingredients: { only: [ :id, :name, :quantity, :position ] },
           steps:       { only: [ :id, :description, :position ] }
         }
-      )
+      ).merge("tags" => recipe.tags.map(&:name))
     end
   end
 end
