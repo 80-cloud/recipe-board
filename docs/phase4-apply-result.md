@@ -8,7 +8,7 @@
 | 関連 PR | (本 PR) |
 | 関連 Issue | #89 |
 | 実施者 | AI（Claude）+ 人間（hideharu）二重チェック |
-| AWS Account | 383158157670 |
+| AWS Account | <AWS_ACCOUNT_ID> |
 | Region | ap-northeast-1 |
 | Terraform | v1.15.2 |
 | AWS Provider | v5.100.0 |
@@ -50,7 +50,7 @@ RDS の創出が支配的（想定通り）。
 | リソース | ID / 値 |
 |---|---|
 | EC2 instance | `i-0a0750d93520560d5` |
-| EC2 EIP | `13.192.27.9` |
+| EC2 EIP | `<EC2_EIP>` |
 | EC2 EIP allocation | `eipalloc-0d4c2ae7bdee1b3c6` |
 | EC2 EIP association | `eipassoc-023db1f0289fbdc79` |
 | EC2 SG | `sg-05ea45b652601e2c1` |
@@ -70,7 +70,7 @@ RDS の創出が支配的（想定通り）。
 ### EIP に curl
 
 ```
-curl http://13.192.27.9/
+curl http://<EC2_EIP>/
 → HTTP 200 / 357 bytes / 0.040s
 ```
 
@@ -88,10 +88,10 @@ curl http://13.192.27.9/
 
 | リソース | 状態 |
 |---|---|
-| EC2 | running / t3.micro / Public IP 13.192.27.9 / Private IP 172.31.27.1 |
+| EC2 | running / t3.micro / Public IP <EC2_EIP> / Private IP <EC2_PRIVATE_IP> |
 | EIP | attached to i-0a0750d93520560d5 |
 | RDS | available / Endpoint resolved / DeletionProtection=True / StorageEncrypted=True / PubliclyAccessible=False |
-| EC2 SG | HTTP 80 from 0.0.0.0/0 / SSH 22 from 180.31.106.2/32 |
+| EC2 SG | HTTP 80 from 0.0.0.0/0 / SSH 22 from <YOUR_HOME_IP>/32 |
 | RDS SG | MySQL 3306 from EC2 SG only |
 
 ---
@@ -161,7 +161,7 @@ Issue body に "terraform apply -auto-approve" リテラルが含まれていた
 ## 7. 学習用 SSH 接続コマンド（参考）
 
 ```bash
-ssh -i ~/.ssh/recipe-board-key.pem ec2-user@13.192.27.9
+ssh -i ~/.ssh/recipe-board-key.pem ec2-user@<EC2_EIP>
 # cloud-init log 確認
 sudo cat /var/log/user-data.log
 # cloud-init done marker

@@ -25,7 +25,7 @@ Plan: 6 to add, 0 to change, 0 to destroy.
 
 | address | type | 主要属性 |
 |---|---|---|
-| `aws_security_group.ec2` | SG | SSH 22 from 180.31.106.2/32 + ::1/128 / HTTP 80 from anywhere |
+| `aws_security_group.ec2` | SG | SSH 22 from <YOUR_HOME_IP>/32 + ::1/128 / HTTP 80 from anywhere |
 | `aws_security_group.rds` | SG | MySQL 3306 from EC2 SG only |
 | `aws_db_subnet_group.main` | DB Subnet Group | default VPC subnets |
 | `aws_db_instance.main` | RDS | MySQL 8.4 / db.t3.micro / 20GB gp3 encrypted / deletion_protection=true / publicly_accessible=false |
@@ -56,7 +56,7 @@ Plan: 6 to add, 0 to change, 0 to destroy.
 
 | 項目 | 値 | 評価 |
 |---|---|---|
-| EC2 SSH source IPv4 | 180.31.106.2/32 | ✅ 単一 IP 限定 |
+| EC2 SSH source IPv4 | <YOUR_HOME_IP>/32 | ✅ 単一 IP 限定 |
 | EC2 SSH source IPv6 | ::1/128 (loopback) | ✅ 実質無効化 |
 | EC2 HTTP source | 0.0.0.0/0 + ::/0 | 🟡 学習用全開放（HTTPS 化は B-9 以降） |
 | EC2 IMDSv2 強制 | http_tokens=required | ✅ |
