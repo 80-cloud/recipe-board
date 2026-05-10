@@ -19,7 +19,7 @@
 ### 新規登録フォーム（タグ入力欄つき）
 ![新規登録フォーム](docs/screenshots/04-new.png)
 
-> 動作環境: 本ローカル（macOS / Safari）。AWS 無料枠での本番デプロイも完了済み。
+> 動作環境: ローカル（macOS / Safari）。AWS 無料枠での本番デプロイも完了済み。
 
 ---
 
@@ -27,7 +27,7 @@
 
 ### MVP（要件定義書 3-1）
 - レシピの登録 / 一覧 / 詳細 / 編集 / 削除
-- 材料・手順をネスト形で 1 画面から登録 / 編集
+- 材料・手順をネスト形式で 1 画面から登録 / 編集
 - バリデーション（タイトル必須・最大文字数等）
 - 削除モーダルで誤操作防止
 
@@ -137,8 +137,7 @@ recipe-board/
 │   ├── 要件定義書.md
 │   ├── 画面設計書.md
 │   ├── DB設計書.md
-│   ├── 技術スタック.md
-│   ├── インフラ構成.md
+│   ├── learning-notes.md     ← 開発中の学び（PDCA(S) の S）
 │   ├── screenshots/          ← 動作スクリーンショット
 │   ├── incidents/            ← 過去事故ライブラリ
 │   └── test-protocols/       ← scout-drone-protocol v3.5
@@ -203,8 +202,6 @@ recipe-board/
 | [`docs/要件定義書.md`](docs/要件定義書.md) | 要件・スコープ定義 |
 | [`docs/画面設計書.md`](docs/画面設計書.md) | 4 画面 + 遷移図 |
 | [`docs/DB設計書.md`](docs/DB設計書.md) | テーブル定義 |
-| [`docs/技術スタック.md`](docs/技術スタック.md) | 採用技術と理由 |
-| [`docs/インフラ構成.md`](docs/インフラ構成.md) | AWS 構成図と多層防御方針 |
 | [`docs/learning-notes.md`](docs/learning-notes.md) | 開発中の学び・PDCA(S) の S |
 
 ---
