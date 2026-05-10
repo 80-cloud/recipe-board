@@ -72,6 +72,20 @@ async function onConfirmDelete() {
             </span>
           </p>
 
+          <!-- タグ chip 列（#112） -->
+          <div
+            v-if="recipe.tags && recipe.tags.length > 0"
+            class="mt-3 flex flex-wrap gap-1.5"
+          >
+            <span
+              v-for="t in recipe.tags"
+              :key="t"
+              class="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700"
+            >
+              {{ t }}
+            </span>
+          </div>
+
           <div class="mt-4 flex gap-2">
             <NuxtLink
               :to="`/recipes/${recipe.id}/edit`"
