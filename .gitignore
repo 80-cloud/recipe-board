@@ -82,3 +82,7 @@ package-lock.json.bak
 Thumbs.db
 *.tmp
 *.bak
+
+# 動画原本（録画ファイル）はリポジトリに含めない（GIF を派生して使う）
+*.mov
+*.mp4
