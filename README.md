@@ -164,7 +164,7 @@ recipe-board/
 | **Phase 2** 3-2: ソート | ✅ PR #109 |
 | **Phase 3** 3-3 | 未着手（提出後発展） |
 | **AWS Phase 4** デプロイ | ✅ B-1〜B-8 完了 |
-| **修練城** v3.5 + 整備 #1〜#8 | ✅ 運用中 |
+| **修練城**（多層防御の総称）v3.5 + 整備 #1〜#8 | ✅ 運用中 |
 
 → 要件定義書 3-1〜3-2 フル達成。
 
@@ -179,9 +179,9 @@ recipe-board/
 - すべての変更を PR 経由で実施（本リポジトリは 100+ PR）
 - 日本語の Conventional Commits 規約
 
-### 2. 過去事故から学ぶ訓練フェーズ運用（修練城 / scout-drone-protocol v3.5）
-- 着手前の **Phase 1 斥候**で過去事故ライブラリと突合
-- 罠の予兆を検知 → 整備 → 本体実装の標準シーケンス
+### 2. 過去事故から学ぶ訓練フェーズ運用（修練城（多層防御の総称） / scout-drone-protocol（着手前検証プロトコル）v3.5）
+- 着手前の **Phase 1 斥候（着手前の事前調査）** で過去事故ライブラリと突合
+- 罠の予兆（バグの危険兆候）を検知 → 整備 → 本体実装の標準シーケンス
 - 詳細: [`docs/test-protocols/scout-drone-protocol.md`](docs/test-protocols/scout-drone-protocol.md)
 
 ### 3. AI（Claude Code）と協働する誤操作防止の多層防御
@@ -191,7 +191,7 @@ recipe-board/
 - AI 利用方針は `CLAUDE.md` セクション 13 を参照
 
 ### 4. インシデント記録の永続化
-- 開発中に発生した「奇襲」「光学迷彩」を [`docs/incidents/INDEX.md`](docs/incidents/INDEX.md) に記録
+- 開発中に発生した「奇襲（想定外バグ）」「光学迷彩（隠れた不具合）」を [`docs/incidents/INDEX.md`](docs/incidents/INDEX.md) に記録
 - 同型事故の再発予防を構造化
 
 ### 5. 提出時の運用モード（緩める / 緩めない の境界明文化）
