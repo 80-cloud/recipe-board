@@ -62,6 +62,11 @@ regexes = [
     # Terraform 変数参照（var.xxx は値ではなく参照、機密情報ではない）
     '''\bvar\.[a-z_]+''',
 
+    # GitHub Actions の permission ディレクティブ
+    # id-token / contents / packages / actions などのキーワードは permission 名であり、
+    # 「token: write」のように値ペアに見えるが機密ではない（false positive 対策）
+    '''\b(id-token|packages|actions|checks|contents|deployments|issues|discussions|pages|pull-requests|repository-projects|security-events|statuses|attestations|models|metadata|environments):\s*(read|write|none)\b''',
+
     # コメント・ドキュメント
     '''^\s*#''',
     '''^\s*//''',
