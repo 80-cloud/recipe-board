@@ -33,17 +33,4 @@ output "eip_public_ip" {
 }
 
 # ----- RDS -----
-output "rds_endpoint" {
-  description = "RDS エンドポイント（host:port）"
-  value       = aws_db_instance.main.endpoint
-}
-
-output "rds_address" {
-  description = "RDS ホスト名のみ"
-  value       = aws_db_instance.main.address
-}
-
-output "rds_port" {
-  description = "RDS ポート"
-  value       = aws_db_instance.main.port
-}
+# recipe-board-db は廃止済み（Issue #133 / 2026-06-14）。RDS 出力は削除。
