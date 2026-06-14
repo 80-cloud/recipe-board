@@ -202,46 +202,13 @@ resource "aws_db_subnet_group" "main" {
   }
 }
 
-# ----- RDS インスタンス -----
-# 無料枠: db.t3.micro × 750h/月 / 20GB gp3 / Single-AZ
-# 削除困難設定（多層防御）:
-#   - deletion_protection = true（AWS 側）
-#   - lifecycle.prevent_destroy = true（Terraform 側）
-#   → 削除には main.tf の編集 + apply が 2 段階必要
-resource "aws_db_instance" "main" {
-  identifier     = "${var.project_name}-db"
-  engine         = "mysql"
-  engine_version = "8.4"
-  instance_class = "db.t3.micro"
-
-  allocated_storage     = 20 # GB（無料枠上限）
-  max_allocated_storage = 20 # autoscaling で 20GB を超えないようにする
-  storage_type          = "gp3"
-  storage_encrypted     = true
-
-  db_name  = "recipe_board"
-  username = var.db_username
-  password = var.db_password
-  port     = 3306
-
-  vpc_security_group_ids = [aws_security_group.rds.id]
-  db_subnet_group_name   = aws_db_subnet_group.main.name
-  publicly_accessible    = false # F5: 公開禁止
-  multi_az               = false # 無料枠維持（倍額回避）
-
-  backup_retention_period = 1    # 最低限のバックアップ保護（無料枠 7 日まで OK だが、allocated 20GB を超えない安全圏として 1 日採用・修練城整備 #11）
-  skip_final_snapshot     = true # 学習用（snapshot 課金回避）
-  deletion_protection     = true # AWS 側削除保護
-  apply_immediately       = true # 学習用（メンテ window を待たない）
-
-  tags = {
-    Name = "${var.project_name}-db"
-  }
-
-  lifecycle {
-    prevent_destroy = true # Terraform 側削除保護（CLAUDE.md 12-3）
-  }
-}
+# ----- RDS インスタンス（廃止済み: Issue #133 / 2026-06-14）-----
+# recipe-board-db は RDS 無料枠の「インスタンス数枠」を解放するため削除した。
+#   - 削除理由: 停止中でも枠とストレージ 20GB を消費し、3 台目（review-park-db）作成を阻害
+#   - 最終スナップショット: recipe-board-db-final-20260614（manual / 必要時に復元可能）
+#   - 二重ロック（deletion_protection + prevent_destroy）はユーザー承認の上で正規手順により解除
+# 注: 下記の aws_security_group.rds / aws_db_subnet_group.main は無害な無料リソースのため残置
+#     （完全クリーンアップは follow-up Issue で対応可能）。
 
 # ----- Elastic IP -----
 # F2 反映: instance 属性で必ず EC2 にアタッチ。
